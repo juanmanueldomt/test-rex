@@ -1,0 +1,38 @@
+{
+  "name": "testrex",
+  "private": true,
+  "description": "Open-source test management with Playwright integration and LLM-assisted test generation",
+  "license": "(MIT OR Apache-2.0)",
+  "type": "module",
+  "packageManager": "pnpm@12.6.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "vitest run --project unit",
+    "test:int": "vitest run --project integration",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "changeset": "changeset",
+    "db:generate": "pnpm --filter @testrex/db db:generate"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^3.0.3",
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.20.4",
+    "eslint": "^10.11.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.12.0",
+    "prettier": "^3.9.8",
+    "tsup": "^8.5.1",
+    "tsx": "^4.23.15",
+    "turbo": "^2.11.3",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.70.1",
+    "vitest": "^5.0.1"
+  }
+}

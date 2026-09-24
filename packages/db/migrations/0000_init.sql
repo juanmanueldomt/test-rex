@@ -1,0 +1,1 @@
+-- Baseline migration. Domain tables are added by later changes.

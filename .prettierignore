@@ -1,0 +1,9 @@
+pnpm-lock.yaml
+dist
+coverage
+.turbo
+packages/db/migrations/meta
+LICENSE-APACHE
+.claude
+test-results
+playwright-report

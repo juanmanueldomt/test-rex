@@ -1,0 +1,94 @@
+/* testRex design tokens. Brand colors come from the logo (emerald + slate).
+   Light-mode primary is emerald-700 so white text on it meets WCAG AA (4.5:1). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: oklch(0.985 0.002 247);
+  --foreground: oklch(0.208 0.042 265.8); /* slate-900 #0F172A */
+  --card: oklch(1 0 0);
+  --popover: oklch(1 0 0);
+  --muted: oklch(0.955 0.006 247);
+  --muted-foreground: oklch(0.446 0.043 257.3); /* slate-600 */
+  --border: oklch(0.905 0.012 256);
+  --input: oklch(0.869 0.022 252.9);
+  --primary: oklch(0.508 0.118 165.6); /* emerald-700 #047857 */
+  --primary-foreground: oklch(0.985 0.002 247);
+  --accent: oklch(0.95 0.052 163); /* emerald-50/100 tint for highlights */
+  --accent-foreground: oklch(0.378 0.077 168.9); /* emerald-900 */
+  --destructive: oklch(0.505 0.213 27.5); /* red-700 */
+  --destructive-foreground: oklch(0.985 0 0);
+  --warning: oklch(0.555 0.163 48.9); /* amber-700 */
+  --ring: oklch(0.508 0.118 165.6);
+  --radius: 0.625rem;
+  color-scheme: light;
+}
+
+.dark {
+  --background: oklch(0.17 0.03 265);
+  --foreground: oklch(0.95 0.008 247);
+  --card: oklch(0.208 0.042 265.8);
+  --popover: oklch(0.208 0.042 265.8);
+  --muted: oklch(0.26 0.036 262);
+  --muted-foreground: oklch(0.72 0.03 257);
+  --border: oklch(0.31 0.034 262);
+  --input: oklch(0.37 0.034 260);
+  --primary: oklch(0.765 0.157 163.2); /* emerald-400 */
+  --primary-foreground: oklch(0.17 0.03 265);
+  --accent: oklch(0.3 0.06 168);
+  --accent-foreground: oklch(0.905 0.093 164.2);
+  --destructive: oklch(0.704 0.191 22.2); /* red-400 */
+  --destructive-foreground: oklch(0.17 0.03 265);
+  --warning: oklch(0.828 0.189 84.4); /* amber-400 */
+  --ring: oklch(0.765 0.157 163.2);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-popover: var(--popover);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-warning: var(--warning);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  html,
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

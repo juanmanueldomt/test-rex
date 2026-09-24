@@ -1,0 +1,51 @@
+schema: spec-driven
+
+context: |
+  Product: testRex — open-source test management platform (QMetry-like) that stores
+  test cases, test scenarios and test runs, links to existing Playwright repositories
+  and uses LLM providers to generate Playwright tests.
+  License: dual MIT OR Apache-2.0.
+
+  Deployment: self-hosted first via `docker compose up` (app + worker + postgres).
+  A multi-tenant cloud (SaaS) edition comes later, so every design MUST be cloud-ready:
+  stateless app containers, no reliance on local disk for durable data (storage adapter:
+  local FS or S3-compatible), tenant isolation enforced in the database, per-org quotas
+  and usage metering hooks, secrets encrypted at rest.
+
+  Tech stack (TypeScript everywhere):
+  - Monorepo: pnpm workspaces + Turborepo. Node 22 LTS+.
+  - apps/web: React + Vite + TanStack Router/Query, shadcn/ui + Radix + Tailwind,
+    TanStack Table, dnd-kit, cmdk, TipTap, Monaco. i18next (en, es).
+  - apps/api: Fastify + Zod schemas (packages/contracts shared with web). Serves the
+    built SPA. SSE for live updates and LLM streaming.
+  - apps/worker: pg-boss job consumers (git, repo indexing, LLM generation, Playwright
+    runs). Runs on the official Playwright image.
+  - packages/db: Drizzle ORM + PostgreSQL 16. Every tenant table has organization_id
+    and Postgres Row-Level Security keyed on `app.org_id` set per request/job.
+  - Auth: Better Auth with organization plugin (OIDC/SAML later).
+  - LLM: Vercel AI SDK behind a LlmProvider interface (Anthropic, OpenAI, Azure,
+    Ollama). Keys are BYOK per organization, AES-256-GCM encrypted.
+  - Git: simple-git. Repositories are linked by git remote URL (HTTPS token or SSH
+    deploy key) and, in self-hosted mode only, by mounted local path. The cloud edition
+    supports git remotes only. testRex never pushes to default branches; it commits to
+    `testrex/*` branches and may open PRs.
+  - Tests: Vitest (unit), Playwright (e2e). Releases: SemVer + Changesets, images on GHCR.
+
+  Domain: Organization > Application > (Folders, TestCase, TestScenario, TestCycle,
+  TestRun, TestExecution, Repository, Environment). Test cases and scenarios are
+  versioned append-only (immutable *_version rows, current_version pointer); executions
+  pin the exact version they ran against. Human keys like CHK-TC-142 per application.
+
+  Conventions: conventional commits, UUIDv7 primary keys, UTC timestamps, soft delete
+  for user content, audit log for every mutation. UX must be keyboard-first, accessible
+  (WCAG 2.1 AA) and support dark mode.
+
+rules:
+  proposal:
+    - Always include a "Non-goals" section
+    - State the impact on the future cloud (multi-tenant) edition
+  design:
+    - Explain how tenant isolation (organization_id + RLS) is preserved
+  tasks:
+    - Break tasks into chunks of at most half a day
+    - Include test tasks alongside implementation tasks

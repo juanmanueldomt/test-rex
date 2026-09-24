@@ -1,0 +1,27 @@
+{
+  "name": "@testrex/worker",
+  "version": "0.0.0",
+  "private": true,
+  "license": "(MIT OR Apache-2.0)",
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js",
+    "typecheck": "tsc -p .",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@testrex/config": "workspace:*",
+    "@testrex/contracts": "workspace:*",
+    "@testrex/db": "workspace:*",
+    "drizzle-orm": "^0.45.3",
+    "pg-boss": "^12.33.6",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@testcontainers/postgresql": "^12.1.0",
+    "@types/pg": "^8.23.1",
+    "pg": "^8.23.0"
+  }
+}

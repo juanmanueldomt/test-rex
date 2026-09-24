@@ -1,0 +1,64 @@
+# testRex self-hosted deployment.
+#   cp .env.example .env   # set APP_SECRET and POSTGRES_PASSWORD
+#   docker compose up -d
+name: testrex
+
+x-common-env:
+  &common-env # Runtime role (Row-Level Security applies) and schema owner (migrations, job queue).
+  DATABASE_URL: ${DATABASE_URL:-postgres://testrex_app:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-testrex}}
+  DATABASE_MIGRATION_URL: ${DATABASE_MIGRATION_URL:-postgres://testrex_owner:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-testrex}}
+  APP_SECRET: ${APP_SECRET:?Set APP_SECRET in .env}
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-testrex}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/init-roles.sh:/docker-entrypoint-initdb.d/10-init-roles.sh:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    image: ${TESTREX_REGISTRY:-ghcr.io/testrex}/testrex-app:${TESTREX_VERSION:-latest}
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      <<: *common-env
+      AUTO_MIGRATE: ${AUTO_MIGRATE:-true}
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:${TESTREX_PORT:-8080}}
+      ALLOW_SIGNUP: ${ALLOW_SIGNUP:-false}
+      SMTP_URL: ${SMTP_URL:-}
+      SMTP_FROM: ${SMTP_FROM:-testRex <no-reply@localhost>}
+    ports:
+      - '${TESTREX_PORT:-8080}:8080'
+
+  worker:
+    image: ${TESTREX_REGISTRY:-ghcr.io/testrex}/testrex-worker:${TESTREX_VERSION:-latest}
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.worker
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      <<: *common-env
+    # Browsers need more shared memory than Docker's 64 MB default.
+    shm_size: 1gb
+
+volumes:
+  pgdata:

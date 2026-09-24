@@ -1,0 +1,20 @@
+{
+  "name": "@testrex/auth",
+  "version": "0.0.0",
+  "private": true,
+  "license": "(MIT OR Apache-2.0)",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p .",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@testrex/contracts": "workspace:*",
+    "@testrex/db": "workspace:*",
+    "better-auth": "^1.7.5",
+    "drizzle-orm": "^0.45.3"
+  }
+}

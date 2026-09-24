@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 300" width="100%" height="100%">
+  <defs>
+    <!-- Sombra sutil para darle profundidad a la mandíbula/checkmark -->
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="3" dy="6" stdDeviation="4" flood-color="#0F172A" flood-opacity="0.15" />
+    </filter>
+
+    <!-- Gradientes de color para un acabado moderno -->
+    <linearGradient id="checkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34D399" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+  </defs>
+
+  <!-- Grupo del Isotipo (T-Rex Simplificado) -->
+  <g transform="translate(15, 0)">
+
+    <!-- Parte Superior de la Cabeza del T-Rex -->
+    <path d="M 150 240
+             Q 130 170 120 110
+             C 120 110, 140 70, 170 70
+             C 190 70, 200 90, 220 90
+             C 250 90, 280 80, 290 80
+             C 320 80, 320 110, 320 110
+             L 310 135
+             L 295 130 L 290 155
+             L 275 140 L 265 170
+             L 250 155 L 235 185
+             L 220 170 L 195 220
+             Q 170 235 150 240 Z"
+          fill="#F1F5F9" />
+
+    <!-- Ojo Afilado -->
+    <polygon points="190,115 215,108 205,125" fill="url(#checkGrad)"/>
+
+    <!-- Fosa Nasal -->
+    <circle cx="295" cy="100" r="4" fill="url(#checkGrad)" opacity="0.9"/>
+
+    <!-- Mandíbula Inferior: Símbolo de Verificación (Checkmark) -->
+    <path d="M 150 240
+             L 200 300
+             L 330 170
+             L 315 155
+             L 200 270
+             L 170 230 Z"
+          fill="url(#checkGrad)"
+          stroke="url(#checkGrad)"
+          stroke-width="8"
+          stroke-linejoin="round"
+          stroke-linecap="round"
+          filter="url(#shadow)" />
+  </g>
+
+  <!-- Tipografía -->
+  <text x="400" y="215" font-family="system-ui, -apple-system, sans-serif" font-size="120" font-weight="900" fill="#F1F5F9" letter-spacing="-3">
+    Test<tspan fill="url(#textGrad)">Rex</tspan>
+  </text>
+</svg>
