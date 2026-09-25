@@ -14,7 +14,7 @@ import {
 } from '@testrex/ui';
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
-import { AppWindow, Archive, FlaskConical, Plus, Settings } from 'lucide-react';
+import { AppWindow, Archive, Plus, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { PageHeader } from '../components/common';
@@ -147,7 +147,8 @@ export function ApplicationsPage({
   );
 }
 
-export function AppHomePage({ orgSlug, appKey }: { orgSlug: string; appKey: string }) {
+/** Application name, key, role, settings link and the archived banner (workspace header). */
+export function AppHeader({ orgSlug, appKey }: { orgSlug: string; appKey: string }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const org = useSuspenseQuery(orgQuery(orgSlug)).data;
@@ -205,24 +206,6 @@ export function AppHomePage({ orgSlug, appKey }: { orgSlug: string; appKey: stri
           ) : null}
         </Alert>
       ) : null}
-      <EmptyState
-        icon={<FlaskConical />}
-        title={t('app.comingSoonTitle')}
-        description={t('app.comingSoonBody', { app: app.name })}
-        action={
-          canManage ? (
-            <Button variant="outline" asChild>
-              <Link
-                to="/o/$orgSlug/a/$appKey/settings"
-                params={{ orgSlug, appKey }}
-                search={{ tab: 'members' }}
-              >
-                {t('app.openSettings')}
-              </Link>
-            </Button>
-          ) : null
-        }
-      />
     </>
   );
 }

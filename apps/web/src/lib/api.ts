@@ -68,3 +68,44 @@ export function errorMessage(error: unknown): string {
     ? i18n.t(key, { ...error.body })
     : error.message || i18n.t('errors.generic');
 }
+
+/**
+ * Uploads one file as multipart/form-data, reporting progress (0–1). Uses XMLHttpRequest
+ * because fetch has no upload progress events.
+ */
+export function uploadFile<T>(
+  path: string,
+  file: File,
+  onProgress?: (fraction: number) => void,
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    request.open('POST', path);
+    request.withCredentials = true;
+    request.setRequestHeader('accept', 'application/json');
+    request.upload.onprogress = (event) => {
+      if (event.lengthComputable) onProgress?.(event.loaded / event.total);
+    };
+    request.onerror = () => reject(new ApiError(0, { code: 'NETWORK', message: 'Network error' }));
+    request.onload = () => {
+      let data: unknown;
+      try {
+        data = request.responseText ? JSON.parse(request.responseText) : undefined;
+      } catch {
+        data = undefined;
+      }
+      if (request.status >= 200 && request.status < 300) return resolve(data as T);
+      const body = (data ?? {}) as Partial<ApiErrorBody>;
+      reject(
+        new ApiError(request.status, {
+          ...body,
+          code: body.code ?? `HTTP_${request.status}`,
+          message: body.message ?? request.statusText,
+        }),
+      );
+    };
+    const form = new FormData();
+    form.append('file', file, file.name);
+    request.send(form);
+  });
+}

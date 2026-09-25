@@ -10,10 +10,12 @@ import {
   pingDb,
   resolveMigrationsDir,
 } from '@testrex/db';
+import { createStorage } from '@testrex/storage';
 import type { FastifyInstance } from 'fastify';
 import { createApiServices, registerApi } from './api';
 import { buildServer, type CheckState, type MigrationState } from './server';
 import type { Mailer } from './services/mailer';
+import { storageHealthCheck } from './services/storage-health';
 import { appVersion } from './version';
 
 export interface StartOptions {
@@ -57,6 +59,7 @@ export async function startApi(options: StartOptions): Promise<RunningApi> {
   const handle = createDb(config.DATABASE_URL, {
     onError: (error) => logger.warn({ err: error }, 'database connection lost'),
   });
+  const storage = createStorage(config);
   let state: MigrationState = { status: 'pending' };
   let roleState: CheckState = 'pending';
   let pollTimer: NodeJS.Timeout | undefined;
@@ -67,11 +70,12 @@ export async function startApi(options: StartOptions): Promise<RunningApi> {
     checkDatabase: () => pingDb(handle.pool),
     migrationState: () => state,
     runtimeRoleState: () => roleState,
+    storageState: storageHealthCheck(storage, logger),
     webDistDir: config.WEB_DIST_DIR ?? defaultWebDistDir(),
     registerRoutes: (app) =>
       registerApi(
         app,
-        createApiServices({ config, logger, db: handle.db, mailer: options.mailer }),
+        createApiServices({ config, logger, db: handle.db, mailer: options.mailer, storage }),
       ),
   });
   await app.listen({ host: config.HOST, port: config.PORT });

@@ -19,6 +19,9 @@ const SPEC_TABLE: Record<AppPermission, Record<AppRole, boolean>> = {
   'app.read': { manager: true, editor: true, tester: true, viewer: true },
   'execution.write': { manager: true, editor: true, tester: true, viewer: false },
   'testcase.write': { manager: true, editor: true, tester: false, viewer: false },
+  'scenario.write': { manager: true, editor: true, tester: false, viewer: false },
+  'comment.write': { manager: true, editor: true, tester: true, viewer: false },
+  'comment.moderate': { manager: true, editor: false, tester: false, viewer: false },
   'app.manage': { manager: true, editor: false, tester: false, viewer: false },
 };
 

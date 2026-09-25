@@ -10,6 +10,10 @@ export const APP_PERMISSIONS = [
   'app.read',
   'execution.write',
   'testcase.write',
+  'scenario.write',
+  'comment.write',
+  /** Delete other people's comments. */
+  'comment.moderate',
   'app.manage',
 ] as const;
 export type AppPermission = (typeof APP_PERMISSIONS)[number];
@@ -26,9 +30,9 @@ export type OrgPermission = (typeof ORG_PERMISSIONS)[number];
 
 /** Mirrors the table in the access-control spec. */
 const APP_ROLE_PERMISSIONS: Record<AppRole, readonly AppPermission[]> = {
-  manager: ['app.read', 'execution.write', 'testcase.write', 'app.manage'],
-  editor: ['app.read', 'execution.write', 'testcase.write'],
-  tester: ['app.read', 'execution.write'],
+  manager: [...APP_PERMISSIONS],
+  editor: ['app.read', 'execution.write', 'testcase.write', 'scenario.write', 'comment.write'],
+  tester: ['app.read', 'execution.write', 'comment.write'],
   viewer: ['app.read'],
 };
 

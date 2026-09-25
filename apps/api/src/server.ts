@@ -17,6 +17,8 @@ export interface ServerDeps {
   migrationState: () => MigrationState;
   /** Whether the runtime database role is subject to Row-Level Security. */
   runtimeRoleState?: () => CheckState;
+  /** Whether attachment storage is writable; reported by readiness when provided. */
+  storageState?: () => Promise<{ state: CheckState; error?: string }>;
   /** Registers application routes (auth, organizations, ...). Omitted in health-only tests. */
   registerRoutes?: (app: FastifyInstance) => Promise<void>;
   /** Directory with the built web app; the API runs without it when absent. */
@@ -41,11 +43,19 @@ export async function buildServer(deps: ServerDeps): Promise<FastifyInstance> {
     const migrations =
       state.status === 'done' ? 'ok' : state.status === 'failed' ? 'failing' : 'pending';
     const databaseRole = deps.runtimeRoleState?.() ?? 'ok';
-    const ready = database === 'ok' && migrations === 'ok' && databaseRole === 'ok';
+    const checks: Record<string, CheckState> = { database, migrations, databaseRole };
+    const errors: Record<string, string> = {};
+    if (deps.storageState) {
+      const storage = await deps.storageState();
+      checks.storage = storage.state;
+      if (storage.error) errors.storage = storage.error;
+    }
+    const ready = Object.values(checks).every((check) => check === 'ok');
     reply.code(ready ? 200 : 503);
     return {
       status: ready ? 'ok' : 'unavailable',
-      checks: { database, migrations, databaseRole },
+      checks,
+      ...(Object.keys(errors).length ? { errors } : {}),
     };
   });
 

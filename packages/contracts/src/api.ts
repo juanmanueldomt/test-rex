@@ -84,6 +84,23 @@ export const AUDIT_ACTIONS = [
   'application.archived',
   'application.restored',
   'application.member_role_changed',
+  'scenario.created',
+  'scenario.updated',
+  'scenario.deleted',
+  'scenario.restored',
+  'scenario.revision_restored',
+  'module.created',
+  'module.renamed',
+  'module.deleted',
+  'tag.created',
+  'comment.created',
+  'comment.edited',
+  'comment.deleted',
+  'requirement_link.added',
+  'requirement_link.updated',
+  'requirement_link.removed',
+  'attachment.uploaded',
+  'attachment.removed',
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
 

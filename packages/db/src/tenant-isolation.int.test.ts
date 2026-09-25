@@ -183,9 +183,18 @@ describe('RLS coverage check', () => {
       expect.arrayContaining([
         'application_members',
         'applications',
+        'attachments',
         'audit_events',
         'invitations',
         'memberships',
+        'modules',
+        'scenario_comments',
+        'scenario_requirement_links',
+        'scenario_revisions',
+        'scenario_tags',
+        'scenarios',
+        'sequences',
+        'tags',
       ]),
     );
     expect(await findUnprotectedTenantTables(superPool)).toEqual([]);

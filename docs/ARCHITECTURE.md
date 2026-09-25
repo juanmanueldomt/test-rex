@@ -21,7 +21,7 @@ testrex-app ── Fastify API + static SPA + SSE + auth
 testrex-worker ── git · repo indexing · LLM generation · Playwright runs
    │
    ├── PostgreSQL 16  (data, queue, Row-Level Security per organization)
-   ├── Artifact storage (local volume or S3-compatible)
+   ├── File storage (local volume or S3-compatible bucket; attachments, run artifacts)
    └── LLM providers (Anthropic, OpenAI, Azure, Ollama; BYOK per organization)
 ```
 
@@ -34,30 +34,37 @@ mounted paths); quotas and metering through hooks that are no-ops when self-host
 ```
 Organization ─< Membership (owner | admin | member)
   └─< Application (key e.g. CHK) ─< ApplicationMember (manager | editor | tester | viewer)
-        ├─< Folder ─< TestCase ─< TestCaseVersion ─< Step
-        ├─< TestScenario ─< ScenarioVersion ─< ScenarioItem → TestCaseVersion
-        ├─< TestCycle ─< TestRun ─< TestExecution (pins TestCaseVersion) ─< StepResult
+        ├─< Module                    flat grouping of scenarios (replaces folders)
+        ├─< Tag                       Playwright-style @tags, per application
+        ├─< TestScenario (CHK-TS-12) ─< ScenarioRevision (r1, r2, … immutable)
+        │     ├─< TestCase (CHK-TC-142) ─< TestCaseVersion ─< Step
+        │     └─< Comment · RequirementLink · Attachment
+        ├─< TestCycle ─< TestRun ─< RunItem → TestCaseVersion (+ ScenarioRevision) ─< StepResult
         ├─< Repository (git remote or mounted path) ─< AutomationLink
         └─< Environment / Build
 ```
 
-Versioning: test cases and scenarios are append-only versions; executions pin versions;
+A test scenario is the testRex counterpart of a Playwright `spec.ts` file: it describes a
+feature or flow and owns its test cases, and each test case belongs to exactly one scenario.
+A test run selects test cases, either all cases of some scenarios or individual ones, and
+every run item pins the test case version (and scenario revision) it ran against.
+
+Versioning: scenario revisions and test case versions are append-only; runs pin them;
 generated code is versioned in git on `testrex/*` branches (never pushed to default
 branches); every mutation is written to the audit log.
 
 ## Roadmap (OpenSpec changes)
 
-| #   | Change                                                                          | Status                               |
-| --- | ------------------------------------------------------------------------------- | ------------------------------------ |
-| 1   | `bootstrap-monorepo`: repo, CI, compose deployment, health, migrations          | implemented, CI unverified on GitHub |
-| 2   | `add-org-app-tenancy`: auth, organizations, applications, RBAC, RLS, audit      | implemented                          |
-| 3   | `add-test-case-management`: folders, test cases, steps, custom fields, search   | planned                              |
-| 4   | `add-test-case-versioning`: versions, diff, restore                             | planned                              |
-| 5   | `add-test-scenarios`: scenarios composed of pinned or latest test cases         | planned                              |
-| 6   | `add-test-execution`: cycles, runs, runner UI, attachments, storage adapter     | planned                              |
-| 7   | `add-dashboards-and-import`: reporting, CSV and QMetry import/export            | planned                              |
-| 8   | `add-repository-linking`: git remotes + mounted paths, indexing                 | planned                              |
-| 9   | `add-playwright-reporter`: `@testrex/playwright-reporter`, tag-based linking    | planned                              |
-| 10  | `add-llm-providers`: provider config, encrypted keys, usage metering            | planned                              |
-| 11  | `add-test-generation`: generation pipeline, validation/repair, diff review, PRs | planned                              |
-| 12  | `add-cloud-edition`: billing, quotas, SSO, Helm/IaC                             | planned                              |
+| #   | Change                                                                                                                          | Status                               |
+| --- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| 1   | `bootstrap-monorepo`: repo, CI, compose deployment, health, migrations                                                          | implemented, CI unverified on GitHub |
+| 2   | `add-org-app-tenancy`: auth, organizations, applications, RBAC, RLS, audit                                                      | implemented                          |
+| 3   | `add-test-scenarios`: workspace, scenarios, modules, tags, revisions, comments, requirement links, attachments, storage adapter | implemented                          |
+| 4   | `add-test-cases`: test cases within scenarios, steps, custom fields, versions, diff, restore                                    | planned                              |
+| 5   | `add-test-execution`: cycles, runs selecting whole scenarios or individual test cases, runner UI                                | planned                              |
+| 6   | `add-dashboards-and-import`: reporting, CSV and QMetry import/export                                                            | planned                              |
+| 7   | `add-repository-linking`: git remotes + mounted paths, indexing                                                                 | planned                              |
+| 8   | `add-playwright-reporter`: `@testrex/playwright-reporter`, tag-based linking                                                    | planned                              |
+| 9   | `add-llm-providers`: provider config, encrypted keys, usage metering                                                            | planned                              |
+| 10  | `add-test-generation`: generation pipeline, validation/repair, diff review, PRs                                                 | planned                              |
+| 11  | `add-cloud-edition`: billing, quotas, SSO, Helm/IaC                                                                             | planned                              |

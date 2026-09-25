@@ -1,3 +1,6 @@
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { Writable } from 'node:stream';
 import { apiEnvSchema, createLogger, loadConfig } from '@testrex/config';
 import { migrate } from '@testrex/db';
@@ -32,9 +35,12 @@ function captureLogger() {
   return { logger: createLogger({ level: 'info', destination }), lines };
 }
 
+const storageDir = mkdtempSync(join(tmpdir(), 'testrex-start-storage-'));
+
 function config(db: TestDatabase, overrides: Record<string, string> = {}) {
   const loaded = loadConfig(apiEnvSchema, {
     APP_SECRET: 'x'.repeat(40),
+    STORAGE_DIR: storageDir,
     DATABASE_URL: db.appUrl,
     DATABASE_MIGRATION_URL: db.ownerUrl,
     HOST: '127.0.0.1',
@@ -63,7 +69,27 @@ describe('startApi', () => {
     await withApi({ config: config(db), logger }, async (api) => {
       expect(await api.migrated).toEqual({ status: 'done' });
       expect(await api.roleChecked).toBe('ok');
-      expect((await api.app.inject('/readyz')).statusCode).toBe(200);
+      const ready = await api.app.inject('/readyz');
+      expect(ready.statusCode).toBe(200);
+      expect(ready.json().checks.storage).toBe('ok');
+    });
+  });
+
+  it('is not ready while the storage directory is not writable, naming the reason', async () => {
+    const db = await createTestDatabase(container);
+    const notADirectory = join(storageDir, 'occupied-by-a-file');
+    writeFileSync(notADirectory, 'x');
+    const { logger, lines } = captureLogger();
+    await withApi({ config: config(db, { STORAGE_DIR: notADirectory }), logger }, async (api) => {
+      await api.roleChecked;
+      const ready = await api.app.inject('/readyz');
+      expect(ready.statusCode).toBe(503);
+      expect(ready.json()).toMatchObject({
+        status: 'unavailable',
+        checks: { database: 'ok', migrations: 'ok', databaseRole: 'ok', storage: 'failing' },
+        errors: { storage: expect.stringMatching(/occupied-by-a-file is not writable/) },
+      });
+      expect(lines.join('')).toMatch(/attachment storage: Storage directory/);
     });
   });
 

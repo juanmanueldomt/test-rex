@@ -18,11 +18,15 @@ LABEL org.opencontainers.image.title="testrex-app" \
       org.opencontainers.image.version="${APP_VERSION}" \
       org.opencontainers.image.revision="${GIT_COMMIT}" \
       org.opencontainers.image.licenses="MIT OR Apache-2.0"
-ENV NODE_ENV=production PORT=8080
+ENV NODE_ENV=production PORT=8080 STORAGE_DIR=/data/storage
 WORKDIR /app
 COPY --from=build /repo/apps/api/dist ./dist
 COPY --from=build /repo/apps/web/dist ./web
 COPY --from=build /repo/packages/db/migrations ./migrations
+# Attachment storage (the compose "storage" volume). A fresh named volume copies this
+# directory's owner and mode. Group-writable with setgid: the worker runs as another user in
+# group 1000 and removes abandoned uploads.
+RUN mkdir -p /data/storage && chown node:node /data/storage && chmod 2775 /data/storage
 USER node
 EXPOSE 8080
 HEALTHCHECK --interval=10s --timeout=5s --start-period=20s --retries=3 \

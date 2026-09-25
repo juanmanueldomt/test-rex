@@ -10,6 +10,7 @@ import {
   CommandItem,
   CommandList,
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -24,6 +25,7 @@ import {
   Building2,
   Check,
   ChevronsUpDown,
+  Keyboard,
   Languages,
   LayoutGrid,
   LogOut,
@@ -33,10 +35,11 @@ import {
   Settings,
   UserPlus,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { signOut } from '../lib/auth';
 import { setLanguage } from '../lib/i18n';
+import { useOpenShortcutHelp, useShortcut, useSingleKeyShortcuts } from '../lib/shortcuts';
 import { appsQuery, meQuery, orgQuery } from '../lib/queries';
 import { useTheme } from '../lib/theme';
 import { Logo, ThemeToggle } from './common';
@@ -131,6 +134,8 @@ function UserMenu() {
   const { t, i18n } = useTranslation();
   const me = useSuspenseQuery(meQuery).data;
   const handleSignOut = useSignOut();
+  const openShortcutHelp = useOpenShortcutHelp();
+  const [singleKeys, setSingleKeys] = useSingleKeyShortcuts();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -157,6 +162,14 @@ function UserMenu() {
             {i18n.language === code ? <Check aria-label="current" /> : null}
           </DropdownMenuItem>
         ))}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={openShortcutHelp}>
+          <Keyboard /> {t('shortcuts.title')}
+          <Kbd className="ml-auto">?</Kbd>
+        </DropdownMenuItem>
+        <DropdownMenuCheckboxItem checked={singleKeys} onCheckedChange={setSingleKeys}>
+          {t('shortcuts.singleKeys')}
+        </DropdownMenuCheckboxItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => void handleSignOut()}>
           <LogOut /> {t('auth.signOut')}
@@ -290,16 +303,13 @@ export function OrgLayout() {
   const [commandOpen, setCommandOpen] = useState(false);
   const isMac = typeof navigator !== 'undefined' && /mac/i.test(navigator.platform);
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
-        event.preventDefault();
-        setCommandOpen((open) => !open);
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+  useShortcut({
+    keys: '$mod+k',
+    description: t('shortcuts.commandMenu'),
+    group: 'general',
+    allowInInputs: true,
+    handler: () => setCommandOpen((open) => !open),
+  });
 
   return (
     <div className="flex min-h-screen flex-col">

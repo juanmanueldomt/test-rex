@@ -1,8 +1,12 @@
 // Integration-test harness: a real database (RLS roles and migrations), the full route stack,
 // and a small cookie-keeping client that behaves like a browser.
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { apiEnvSchema, createLogger, loadConfig } from '@testrex/config';
 import { createDb, type DbHandle } from '@testrex/db';
 import { createTestDatabase, type TestDatabase } from '@testrex/db/testing';
+import { LocalStorage, type StorageAdapter } from '@testrex/storage';
 import type { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import type { FastifyInstance, InjectOptions } from 'fastify';
 import pg from 'pg';
@@ -24,6 +28,10 @@ export interface HarnessOptions {
   mailer?: Mailer;
   quota?: QuotaService;
   now?: () => Date;
+  /** Defaults to a temporary directory removed on close. */
+  storage?: StorageAdapter;
+  /** ATTACHMENT_MAX_BYTES. */
+  attachmentMaxBytes?: number;
 }
 
 export interface Harness {
@@ -43,13 +51,21 @@ export async function createHarness(
   const database = await createTestDatabase(container);
   const handle: DbHandle = createDb(database.appUrl);
   const superPool = new pg.Pool({ connectionString: database.superUrl });
-  const logger = createLogger({ level: 'silent' });
+  // TEST_LOG_LEVEL=error shows server-side failures while debugging a test.
+  const logger = createLogger({
+    level: (process.env.TEST_LOG_LEVEL as 'error' | undefined) ?? 'silent',
+  });
+  const storageDir = mkdtempSync(join(tmpdir(), 'testrex-api-storage-'));
   const config = loadConfig(apiEnvSchema, {
     APP_SECRET: 'test-secret-that-is-at-least-32-characters',
     DATABASE_URL: database.appUrl,
     DATABASE_MIGRATION_URL: database.ownerUrl,
     PUBLIC_URL,
     ALLOW_SIGNUP: options.allowSignup === false ? 'false' : 'true',
+    STORAGE_DIR: storageDir,
+    ...(options.attachmentMaxBytes
+      ? { ATTACHMENT_MAX_BYTES: String(options.attachmentMaxBytes) }
+      : {}),
   });
   const services = createApiServices({
     config,
@@ -58,6 +74,7 @@ export async function createHarness(
     mailer: options.mailer,
     quota: options.quota,
     now: options.now,
+    storage: options.storage ?? new LocalStorage(storageDir),
   });
   const app = await buildServer({
     logger,
@@ -76,6 +93,7 @@ export async function createHarness(
       await app.close();
       await handle.close();
       await superPool.end();
+      rmSync(storageDir, { recursive: true, force: true });
     },
   };
 }
@@ -84,6 +102,15 @@ export interface TestResponse<T = Loose> {
   status: number;
   body: T;
   headers: Record<string, unknown>;
+  /** The body bytes (for downloads). */
+  raw: Buffer;
+}
+
+export interface UploadFile {
+  name: string;
+  content: Buffer | string;
+  /** What the browser claims; the API detects the real type from the content. */
+  type?: string;
 }
 
 /** Keeps cookies between requests and sends the Origin a browser on PUBLIC_URL would. */
@@ -116,10 +143,12 @@ export class TestClient {
     const response = await this.app.inject({
       method,
       url,
-      payload: body === undefined ? undefined : JSON.stringify(body),
+      payload: body === undefined ? undefined : Buffer.isBuffer(body) ? body : JSON.stringify(body),
       headers: {
         origin: PUBLIC_URL,
-        ...(body === undefined ? {} : { 'content-type': 'application/json' }),
+        ...(body === undefined || Buffer.isBuffer(body)
+          ? {}
+          : { 'content-type': 'application/json' }),
         ...(this.cookies.size > 0 ? { cookie: this.cookieHeader } : {}),
         ...headers,
       },
@@ -138,7 +167,29 @@ export class TestClient {
     } catch {
       // Non-JSON body; keep the text.
     }
-    return { status: response.statusCode, body: parsed as T, headers: response.headers };
+    return {
+      status: response.statusCode,
+      body: parsed as T,
+      headers: response.headers,
+      raw: response.rawPayload,
+    };
+  }
+
+  /** Sends one file as multipart/form-data, like a browser file input. */
+  upload<T = Loose>(url: string, file: UploadFile) {
+    const boundary = `----testrex${Math.random().toString(16).slice(2)}`;
+    const payload = Buffer.concat([
+      Buffer.from(
+        `--${boundary}\r\n` +
+          `Content-Disposition: form-data; name="file"; filename="${file.name}"\r\n` +
+          `Content-Type: ${file.type ?? 'application/octet-stream'}\r\n\r\n`,
+      ),
+      Buffer.isBuffer(file.content) ? file.content : Buffer.from(file.content),
+      Buffer.from(`\r\n--${boundary}--\r\n`),
+    ]);
+    return this.request<T>('POST', url, payload, {
+      'content-type': `multipart/form-data; boundary=${boundary}`,
+    });
   }
 
   get = <T = Loose>(url: string) => this.request<T>('GET', url);
@@ -216,5 +267,79 @@ export function recordingMailer(): Mailer & { sent: MailMessage[] } {
     async send(message) {
       sent.push(message);
     },
+  };
+}
+
+/** Grants `member` (an organization member) a role on an application. */
+export async function grantAppRole(
+  manager: TestClient,
+  slug: string,
+  appKey: string,
+  member: TestClient,
+  role: 'manager' | 'editor' | 'tester' | 'viewer',
+): Promise<void> {
+  const res = await manager.put(`/api/orgs/${slug}/apps/${appKey}/members/${member.user!.id}`, {
+    role,
+  });
+  if (res.status !== 200) throw new Error(`grant failed: ${JSON.stringify(res.body)}`);
+}
+
+/** Creates an application and returns its key. */
+export async function createApp(owner: TestClient, slug: string, name: string, key: string) {
+  const res = await owner.post(`/api/orgs/${slug}/apps`, { name, key });
+  if (res.status !== 201) throw new Error(`app creation failed: ${JSON.stringify(res.body)}`);
+  return key;
+}
+
+export interface ScenarioTeam {
+  slug: string;
+  owner: TestClient;
+  manager: TestClient;
+  editor: TestClient;
+  editor2: TestClient;
+  tester: TestClient;
+  viewer: TestClient;
+  /** Base URL of application CHK's API. */
+  chk: string;
+  /** Base URL of application PAY's API (same organization). */
+  pay: string;
+}
+
+/**
+ * An organization "acme" with applications CHK and PAY and one member per application role
+ * on CHK (Ana and Luis are both editors). Everyone except the owner is an organization member.
+ */
+export async function scenarioTeam(harness: Harness): Promise<ScenarioTeam> {
+  const owner = await signedUp(harness, 'Olivia Owner');
+  const manager = await signedUp(harness, 'Mia Manager');
+  const editor = await signedUp(harness, 'Ana Editor');
+  const editor2 = await signedUp(harness, 'Luis Editor');
+  const tester = await signedUp(harness, 'Tom Tester');
+  const viewer = await signedUp(harness, 'Vera Viewer');
+  const slug = await createOrg(owner, 'Acme QA', 'acme');
+  await createApp(owner, slug, 'Checkout', 'CHK');
+  await createApp(owner, slug, 'Payments', 'PAY');
+  const roles = [
+    [manager, 'manager'],
+    [editor, 'editor'],
+    [editor2, 'editor'],
+    [tester, 'tester'],
+    [viewer, 'viewer'],
+  ] as const;
+  for (const [member, role] of roles) {
+    await addMember(owner, slug, member, 'member');
+    await grantAppRole(owner, slug, 'CHK', member, role);
+  }
+  await grantAppRole(owner, slug, 'PAY', editor, 'editor');
+  return {
+    slug,
+    owner,
+    manager,
+    editor,
+    editor2,
+    tester,
+    viewer,
+    chk: `/api/orgs/${slug}/apps/CHK`,
+    pay: `/api/orgs/${slug}/apps/PAY`,
   };
 }

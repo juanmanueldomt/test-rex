@@ -23,9 +23,10 @@ test('onboarding creates the organization and first application, then lands on t
   await expect(page.getByText('Step 3 of 3')).toBeVisible();
   await page.getByRole('button', { name: 'Skip for now' }).click();
 
-  await expect(page).toHaveURL(new RegExp(`/o/${slug}/a/CW$`));
+  // The application home opens on the test scenarios tab.
+  await expect(page).toHaveURL(new RegExp(`/o/${slug}/a/CW/scenarios$`));
   await expect(page.getByRole('heading', { name: 'Checkout Web' })).toBeVisible();
-  await expect(page.getByText('Test cases are coming soon')).toBeVisible();
+  await expect(page.getByText('No test scenarios yet')).toBeVisible();
 });
 
 test('invitations sent during onboarding are shown as copyable links', async ({ page }) => {

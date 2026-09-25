@@ -8,6 +8,7 @@ import {
   pingDb,
   resolveMigrationsDir,
 } from '@testrex/db';
+import { createStorage } from '@testrex/storage';
 import { PgBoss } from 'pg-boss';
 import { registerJobs } from './jobs';
 
@@ -101,7 +102,7 @@ export async function startWorker(options: StartWorkerOptions): Promise<RunningW
       return;
     }
     await boss.start();
-    await registerJobs(boss, { logger, db: handle.db });
+    await registerJobs(boss, { logger, db: handle.db, storage: createStorage(config) });
     bossStarted = true;
     logger.info('worker is processing jobs');
   })();

@@ -1,6 +1,13 @@
 import { Writable } from 'node:stream';
 import { describe, expect, it } from 'vitest';
-import { apiEnvSchema, ConfigError, createLogger, loadConfig, redactConfig } from './index';
+import {
+  apiEnvSchema,
+  ConfigError,
+  createLogger,
+  loadConfig,
+  redactConfig,
+  workerEnvSchema,
+} from './index';
 
 const SECRET = 'super-secret-value-that-is-long-enough-123';
 const DB_PASSWORD = 'db-pa55word';
@@ -48,6 +55,70 @@ describe('loadConfig', () => {
     expect(loadConfig(apiEnvSchema, { ...validEnv, AUTO_MIGRATE: 'false' }).AUTO_MIGRATE).toBe(
       false,
     );
+  });
+});
+
+describe('storage settings', () => {
+  it('default to a local directory and a 25 MB attachment limit', () => {
+    for (const schema of [apiEnvSchema, workerEnvSchema]) {
+      expect(loadConfig(schema, validEnv)).toMatchObject({
+        STORAGE_DRIVER: 'local',
+        STORAGE_DIR: 'data/storage',
+        S3_REGION: 'us-east-1',
+        S3_FORCE_PATH_STYLE: false,
+      });
+    }
+    expect(loadConfig(apiEnvSchema, validEnv).ATTACHMENT_MAX_BYTES).toBe(26_214_400);
+  });
+
+  it('parses an S3-compatible configuration', () => {
+    const config = loadConfig(apiEnvSchema, {
+      ...validEnv,
+      STORAGE_DRIVER: 's3',
+      S3_BUCKET: 'files',
+      S3_ENDPOINT: 'http://minio:9000',
+      S3_FORCE_PATH_STYLE: 'true',
+      S3_ACCESS_KEY_ID: 'key',
+      S3_SECRET_ACCESS_KEY: 's3-secret-value',
+      ATTACHMENT_MAX_BYTES: '1048576',
+    });
+    expect(config).toMatchObject({
+      STORAGE_DRIVER: 's3',
+      S3_BUCKET: 'files',
+      S3_FORCE_PATH_STYLE: true,
+      ATTACHMENT_MAX_BYTES: 1_048_576,
+    });
+  });
+
+  it('requires a bucket for S3 and both keys or neither', () => {
+    expect(loadError({ ...validEnv, STORAGE_DRIVER: 's3' }).issues).toEqual([
+      { key: 'S3_BUCKET', message: 'is required' },
+    ]);
+    expect(
+      loadError({ ...validEnv, STORAGE_DRIVER: 's3', S3_BUCKET: 'b', S3_ACCESS_KEY_ID: 'k' })
+        .issues,
+    ).toEqual([{ key: 'S3_SECRET_ACCESS_KEY', message: 'is required' }]);
+    expect(loadError({ ...validEnv, STORAGE_DRIVER: 'ftp' }).issues.map((i) => i.key)).toEqual([
+      'STORAGE_DRIVER',
+    ]);
+    expect(loadError({ ...validEnv, ATTACHMENT_MAX_BYTES: 'lots' }).issues).toEqual([
+      { key: 'ATTACHMENT_MAX_BYTES', message: 'must be a number of bytes' },
+    ]);
+  });
+
+  it('redacts S3 credentials', () => {
+    const safe = redactConfig(
+      loadConfig(apiEnvSchema, {
+        ...validEnv,
+        STORAGE_DRIVER: 's3',
+        S3_BUCKET: 'files',
+        S3_ACCESS_KEY_ID: 'AKIAEXAMPLEKEY',
+        S3_SECRET_ACCESS_KEY: 's3-secret-value',
+      }),
+    );
+    expect(JSON.stringify(safe)).not.toContain('s3-secret-value');
+    expect(JSON.stringify(safe)).not.toContain('AKIAEXAMPLEKEY');
+    expect(safe.S3_BUCKET).toBe('files');
   });
 });
 

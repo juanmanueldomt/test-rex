@@ -29,6 +29,33 @@ Open <http://localhost:8080>. Check health with `curl http://localhost:8080/read
 
 Configuration is documented in [`deploy/.env.example`](deploy/.env.example).
 
+### File storage
+
+Attachments (files and screenshots on test scenarios) are stored either in a directory or
+in an S3-compatible bucket. By default (`STORAGE_DRIVER=local`) compose keeps them in the
+`storage` Docker volume, mounted at `/data/storage` in the app and worker containers; back
+it up together with the `pgdata` volume. Uploads are limited to `ATTACHMENT_MAX_BYTES`
+(25 MB by default).
+
+To use a bucket instead (AWS S3, MinIO, Cloudflare R2, ...), set in `deploy/.env`:
+
+```bash
+STORAGE_DRIVER=s3
+S3_BUCKET=testrex-attachments
+S3_REGION=us-east-1
+# For MinIO or another S3-compatible service; leave empty for AWS S3:
+S3_ENDPOINT=http://minio:9000
+S3_FORCE_PATH_STYLE=true
+# Leave both empty to use the default AWS credential chain (e.g. an IAM role):
+S3_ACCESS_KEY_ID=...
+S3_SECRET_ACCESS_KEY=...
+```
+
+The bucket must exist, and the credentials need to read, write and delete objects in it.
+With S3, attachments never touch the containers' disks. `/readyz` reports a `storage`
+check and stays unavailable, naming the problem, while the directory is not writable or
+the bucket cannot be used.
+
 ## Development
 
 Requirements: Node 22+, pnpm (via `corepack enable`), Docker (for integration tests).
@@ -54,6 +81,7 @@ proposals live in [`openspec/changes`](openspec/changes) and accepted behavior i
 | `apps/worker`        | Background jobs (git, generation, Playwright runs) |
 | `packages/config`    | Environment configuration and logging              |
 | `packages/db`        | Database client, schema and migrations             |
+| `packages/storage`   | File storage adapters (local directory, S3)        |
 | `packages/contracts` | Schemas shared by API and web                      |
 | `packages/ui`        | UI component library                               |
 | `deploy`             | Dockerfiles and Docker Compose                     |

@@ -47,6 +47,33 @@ describe('health endpoints', () => {
   });
 });
 
+describe('storage check', () => {
+  it('is reported by readiness when configured', async () => {
+    const app = await buildServer(deps({ storageState: async () => ({ state: 'ok' }) }));
+    const ready = await app.inject('/readyz');
+    expect(ready.statusCode).toBe(200);
+    expect(ready.json().checks.storage).toBe('ok');
+  });
+
+  it('makes readiness 503 with the reason while traffic is still served', async () => {
+    const app = await buildServer(
+      deps({
+        storageState: async () => ({
+          state: 'failing',
+          error: 'S3 bucket files is not usable: NoSuchBucket',
+        }),
+      }),
+    );
+    const ready = await app.inject('/readyz');
+    expect(ready.statusCode).toBe(503);
+    expect(ready.json()).toMatchObject({
+      checks: { storage: 'failing' },
+      errors: { storage: 'S3 bucket files is not usable: NoSuchBucket' },
+    });
+    expect((await app.inject('/api/version')).statusCode).toBe(200);
+  });
+});
+
 describe('runtime role check', () => {
   it('is not ready and serves no traffic when the database role bypasses RLS', async () => {
     const app = await buildServer(deps({ runtimeRoleState: () => 'failing' }));

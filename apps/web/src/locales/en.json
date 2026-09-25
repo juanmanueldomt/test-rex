@@ -14,7 +14,9 @@
     "retry": "Try again",
     "skip": "Skip for now",
     "you": "you",
-    "saved": "Changes saved"
+    "saved": "Changes saved",
+    "deletedUser": "Deleted user",
+    "timeBy": "{{time}} · {{name}}"
   },
   "roles": {
     "owner": "Owner",
@@ -53,6 +55,40 @@
     },
     "key": {
       "invalid": "2–10 uppercase letters or digits, starting with a letter"
+    },
+    "title": {
+      "required": "Enter a title",
+      "tooLong": "Use at most 200 characters"
+    },
+    "tag": {
+      "required": "Enter a tag",
+      "invalid": "Tags use letters, digits, “.”, “_” or “-” and start with a letter or digit, for example @smoke"
+    },
+    "tags": {
+      "tooMany": "Use at most 20 tags"
+    },
+    "version": {
+      "invalid": "Use 1 to 4 numbers separated by dots, for example 3.2.1",
+      "inverted": "“From” must not be greater than “up to”"
+    },
+    "richText": {
+      "tooLong": "Use at most 100,000 characters"
+    },
+    "module": {
+      "tooLong": "Use at most 60 characters",
+      "notFound": "Choose an existing module"
+    },
+    "comment": {
+      "required": "Write a comment",
+      "tooLong": "Use at most 10,000 characters"
+    },
+    "url": {
+      "required": "Enter a URL",
+      "tooLong": "Use at most 2,000 characters",
+      "httpOnly": "Only http and https URLs are allowed"
+    },
+    "label": {
+      "tooLong": "Use at most 200 characters"
     }
   },
   "errors": {
@@ -74,7 +110,19 @@
     "INVITATION_ACCEPTED": "This invitation has already been used.",
     "INVITATION_REVOKED": "This invitation was cancelled.",
     "FORBIDDEN": "You do not have permission to do this.",
-    "NOT_FOUND": "Not found."
+    "NOT_FOUND": "Not found.",
+    "VALIDATION_FAILED": "Some fields are invalid.",
+    "SCENARIO_CHANGED": "{{changedBy}} changed this scenario since you opened it.",
+    "SCENARIO_DELETED": "This scenario is deleted. Restore it to make changes.",
+    "MODULE_EXISTS": "A module with this name already exists.",
+    "MODULE_IN_USE": "This module is used by {{count}} scenarios. Move them to another module first.",
+    "MODULE_NOT_FOUND": "The selected module does not exist anymore.",
+    "LINK_DUPLICATE": "This URL is already linked to the scenario.",
+    "LINK_LIMIT": "A scenario can have at most {{max}} requirement links.",
+    "ATTACHMENT_NOT_ALLOWED": "The text embeds images that do not belong to this scenario.",
+    "NOT_COMMENT_AUTHOR": "Only the author can change this comment.",
+    "FILE_REQUIRED": "Choose a file to upload.",
+    "FILE_TOO_LARGE": "The file is too large."
   },
   "auth": {
     "signInTitle": "Sign in to testRex",
@@ -200,10 +248,7 @@
     "overview": "Overview",
     "settings": "Settings",
     "archivedBanner": "This application is archived and read-only.",
-    "restore": "Restore",
-    "comingSoonTitle": "Test cases are coming soon",
-    "comingSoonBody": "This is where {{app}}'s test cases, scenarios and runs will live. For now you can manage who has access in settings.",
-    "openSettings": "Open settings"
+    "restore": "Restore"
   },
   "appSettings": {
     "title": "Application settings",
@@ -311,6 +356,35 @@
         "archived": "Archived application",
         "restored": "Restored application",
         "member_role_changed": "Changed application access"
+      },
+      "scenario": {
+        "created": "Created scenario",
+        "updated": "Edited scenario",
+        "deleted": "Deleted scenario",
+        "restored": "Restored scenario",
+        "revision_restored": "Restored a scenario revision"
+      },
+      "module": {
+        "created": "Created module",
+        "renamed": "Renamed module",
+        "deleted": "Deleted module"
+      },
+      "tag": {
+        "created": "Created tag"
+      },
+      "comment": {
+        "created": "Commented",
+        "edited": "Edited comment",
+        "deleted": "Deleted comment"
+      },
+      "requirement_link": {
+        "added": "Linked requirement",
+        "updated": "Edited requirement link",
+        "removed": "Removed requirement link"
+      },
+      "attachment": {
+        "uploaded": "Uploaded file",
+        "removed": "Removed file"
       }
     },
     "fields": {
@@ -319,7 +393,23 @@
       "key": "Key",
       "role": "Role",
       "description": "Description",
-      "archived": "Archived"
+      "archived": "Archived",
+      "title": "Title",
+      "status": "Status",
+      "priority": "Priority",
+      "module": "Module",
+      "tags": "Tags",
+      "versionFrom": "Supported from",
+      "versionTo": "Up to",
+      "stepsToReach": "Steps to reach",
+      "deleted": "Deleted",
+      "revision": "Revision",
+      "comment": "Comment",
+      "author": "Author",
+      "link": "Link",
+      "label": "Label",
+      "file": "File",
+      "size": "Size (bytes)"
     },
     "yes": "Yes",
     "no": "No",
@@ -330,5 +420,275 @@
     "body": "This page does not exist, or you do not have access to it. If someone shared this link with you, ask them to invite you.",
     "home": "Go to my organizations",
     "signIn": "Sign in"
+  },
+  "workspace": {
+    "tabs": {
+      "label": "Application sections",
+      "scenarios": "Test scenarios",
+      "runs": "Test runs"
+    },
+    "runsTitle": "Test runs are under construction",
+    "runsBody": "Soon you will run test scenarios and their test cases here and follow the results of each run."
+  },
+  "shortcuts": {
+    "title": "Keyboard shortcuts",
+    "body": "Shortcuts available on this page.",
+    "help": "Show keyboard shortcuts",
+    "then": "then",
+    "off": "(turned off)",
+    "singleKeys": "Single-key shortcuts",
+    "singleKeysHint": "Turn off to keep only shortcuts with Ctrl or ⌘. Esc keeps working. Remembered in this browser.",
+    "commandMenu": "Open the command menu",
+    "goScenarios": "Go to test scenarios",
+    "goRuns": "Go to test runs",
+    "newScenario": "New scenario",
+    "focusSearch": "Search scenarios",
+    "nextRow": "Select the next scenario",
+    "previousRow": "Select the previous scenario",
+    "openRow": "Open the selected scenario",
+    "edit": "Edit the scenario",
+    "save": "Save",
+    "cancel": "Cancel or close",
+    "groups": {
+      "general": "General",
+      "navigation": "Navigation",
+      "scenarios": "Scenarios",
+      "editing": "Editing"
+    }
+  },
+  "scenarios": {
+    "new": "New scenario",
+    "searchLabel": "Search scenarios",
+    "searchPlaceholder": "Search by key, title, text or requirement…",
+    "gridLabel": "Test scenarios",
+    "loading": "Loading scenarios…",
+    "columns": {
+      "key": "Key",
+      "title": "Title",
+      "status": "Status",
+      "module": "Module",
+      "priority": "Priority",
+      "tags": "Tags",
+      "testCases": "Test cases",
+      "author": "Author",
+      "updated": "Updated"
+    },
+    "filters": {
+      "label": "Filters",
+      "active": "Active filters",
+      "status": "Status",
+      "priority": "Priority",
+      "module": "Module",
+      "author": "Author",
+      "tags": "Tags",
+      "tagsSearch": "Search tags",
+      "noTags": "No tags found",
+      "version": "Version",
+      "versionLabel": "Supported in version",
+      "versionHint": "For example 3.2",
+      "apply": "Apply",
+      "showDeleted": "Show deleted",
+      "noModule": "No module",
+      "remove": "Remove filter {{filter}}",
+      "clearAll": "Clear all"
+    },
+    "deleted": "Deleted",
+    "moreTags_one": "{{count}} more tag",
+    "moreTags_other": "{{count}} more tags",
+    "andMore_one": "and {{count}} more",
+    "andMore_other": "and {{count}} more",
+    "filterByTag": "Filter by {{tag}}",
+    "emptyTitle": "No test scenarios yet",
+    "emptyBody": "A test scenario describes a feature or flow under test and groups its test cases, like a Playwright spec file.",
+    "noMatches": "No matching scenarios",
+    "noMatchesBody": "Try other words or remove some filters.",
+    "clearFilters": "Clear filters",
+    "range": "{{from}}–{{to}} of {{total}}",
+    "pageSize": "Rows per page",
+    "pagination": "Pages",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "page": "Page {{page}}"
+  },
+  "scenario": {
+    "status": {
+      "draft": "Draft",
+      "ready": "Ready",
+      "deprecated": "Deprecated"
+    },
+    "priority": {
+      "critical": "Critical",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "fields": {
+      "title": "Title",
+      "status": "Status",
+      "priority": "Priority",
+      "module": "Module",
+      "tags": "Tags",
+      "versionFrom": "Supported from",
+      "versionTo": "Up to",
+      "versionRange": "Supported versions",
+      "description": "Description",
+      "stepsToReach": "Steps to reach"
+    },
+    "descriptionPlaceholder": "What this scenario covers and why it matters…",
+    "stepsToReachPlaceholder": "Preconditions, test data and how to get there. Use headings for separate sections.",
+    "noDescription": "No description.",
+    "noSteps": "No steps to reach.",
+    "noModule": "No module",
+    "noTags": "No tags",
+    "anyVersion": "All versions",
+    "from": "{{version}} and later",
+    "upTo": "up to {{version}}",
+    "fromTo": "{{from}} – {{to}}",
+    "revision": "r{{number}}",
+    "currentRevision": "Current revision",
+    "breadcrumb": "Breadcrumb",
+    "properties": "Scenario properties",
+    "author": "Created",
+    "lastUpdate": "Last update",
+    "tabs": {
+      "details": "Details",
+      "cases": "Test cases ({{count}})",
+      "history": "History"
+    },
+    "casesTitle": "Test cases are coming soon",
+    "casesBody": "Each test case will belong to this scenario, like a test inside a Playwright spec file.",
+    "edit": "Edit",
+    "delete": "Delete",
+    "restore": "Restore",
+    "deleteTitle": "Delete {{key}}?",
+    "deleteBody": "It disappears from the scenario list but keeps its key, history, comments and attachments. You can restore it later.",
+    "deleted": "Scenario deleted",
+    "restored": "Scenario restored",
+    "deletedBanner": "This scenario was deleted {{when}} by {{name}}. It is read-only until it is restored."
+  },
+  "form": {
+    "label": "Scenario",
+    "newTitle": "New test scenario",
+    "editTitle": "Edit {{key}}",
+    "create": "Create scenario",
+    "save": "Save",
+    "saveHint": "Ctrl+S or ⌘S saves.",
+    "created": "{{key}} created",
+    "saved": "Changes saved",
+    "noChanges": "Nothing changed, so no new revision was created.",
+    "moduleNone": "No module",
+    "moduleSearch": "Search or create a module",
+    "moduleEmpty": "No modules yet",
+    "moduleCreate": "Create module “{{name}}”",
+    "moduleCreated": "Module {{name}} created",
+    "moduleExists": "Module {{name}} already exists and was selected.",
+    "tagsPlaceholder": "Add tags",
+    "tagsSearch": "Type a tag",
+    "tagsEmpty": "Type to add a tag",
+    "tagCreate": "Add {{tag}}",
+    "tagsHint": "Shown as Playwright tags, for example @smoke.",
+    "versionHint": "For example 3.2.1. Leave empty for no limit.",
+    "unsavedTitle": "Discard unsaved changes?",
+    "unsavedBody": "Your changes to this scenario have not been saved.",
+    "discard": "Discard changes",
+    "keepEditing": "Keep editing",
+    "conflictTitle": "Someone else changed this scenario",
+    "conflictBody": "{{name}} saved r{{revision}} {{when}}. Your changes were not saved; they are still in the form so you can copy them.",
+    "conflictCompare": "Compare r{{base}} with r{{latest}}",
+    "conflictKeep": "Keep my changes",
+    "conflictReload": "Discard mine and load the latest"
+  },
+  "editor": {
+    "toolbar": "{{field}} formatting",
+    "heading2": "Heading",
+    "heading3": "Subheading",
+    "bold": "Bold",
+    "italic": "Italic",
+    "strike": "Strikethrough",
+    "code": "Inline code",
+    "bulletList": "Bulleted list",
+    "orderedList": "Numbered list",
+    "taskList": "Checklist",
+    "codeBlock": "Code block",
+    "table": "Insert table",
+    "link": "Link",
+    "linkPrompt": "Link URL (leave empty to remove the link)",
+    "image": "Insert image"
+  },
+  "history": {
+    "title": "History",
+    "created": "Created the scenario",
+    "restoredFrom": "Restored r{{number}}",
+    "changed": "{{field}} changed",
+    "change": "{{field}}: {{from}} → {{to}}",
+    "none": "none",
+    "current": "current",
+    "view": "View r{{number}}",
+    "compare": "Compare",
+    "compareWith": "Compare r{{from}} with r{{to}}"
+  },
+  "revision": {
+    "banner": "You are viewing r{{number}} of {{latest}}, saved {{when}} by {{name}}.",
+    "isCurrent": "This is the current revision.",
+    "openCurrent": "Open current",
+    "restore": "Restore this revision",
+    "restoreTitle": "Restore r{{number}}?",
+    "restoreBody": "This creates a new revision with the content of r{{number}}. No revision is deleted.",
+    "restored": "Restored r{{number}} as r{{revision}}",
+    "notFound": "This revision does not exist.",
+    "backToHistory": "Back to history"
+  },
+  "compare": {
+    "title": "Compare revisions of {{key}}",
+    "from": "From",
+    "to": "To",
+    "field": "Field",
+    "fields": "Changed fields",
+    "identical": "These revisions have the same content.",
+    "added": "Added",
+    "removed": "Removed"
+  },
+  "comments": {
+    "title": "Comments",
+    "label": "Comment",
+    "placeholder": "Write a comment. Markdown is supported.",
+    "write": "Write",
+    "preview": "Preview",
+    "nothingToPreview": "Nothing to preview.",
+    "add": "Comment",
+    "edit": "Edit comment",
+    "delete": "Delete comment",
+    "deleteTitle": "Delete this comment?",
+    "deleteBody": "It will be removed from the thread.",
+    "deleted": "Comment deleted",
+    "edited": "edited",
+    "onRevision": "on r{{number}}",
+    "empty": "No comments yet."
+  },
+  "links": {
+    "title": "Requirements",
+    "add": "Add link",
+    "url": "URL",
+    "label": "Label (optional)",
+    "edit": "Edit link {{name}}",
+    "remove": "Remove link {{name}}",
+    "removeTitle": "Remove this link?",
+    "empty": "No linked requirements.",
+    "opensNewTab": "(opens in a new tab)"
+  },
+  "attachments": {
+    "title": "Attachments",
+    "upload": "Attach files",
+    "drop": "Drop files here or",
+    "choose": "choose files",
+    "uploading": "Uploading {{name}}…",
+    "tooLarge": "{{name}} is larger than the {{limit}} limit.",
+    "failed": "Could not upload {{name}}.",
+    "empty": "No attachments.",
+    "download": "Download {{name}}",
+    "remove": "Remove {{name}}",
+    "removeTitle": "Remove {{name}}?",
+    "removeBody": "It disappears from this list. Earlier revisions that show it keep showing it.",
+    "removed": "Attachment removed"
   }
 }

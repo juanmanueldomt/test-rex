@@ -10,4 +10,15 @@ describe('unlimitedQuota (self-hosted)', () => {
       ).resolves.toBeUndefined();
     },
   );
+
+  it('allows uploads of any size regardless of stored bytes', async () => {
+    await expect(
+      unlimitedQuota.check('storage.upload', {
+        organizationId: 'any',
+        plan: 'self_hosted',
+        bytes: 10 * 1024 ** 3,
+        usageBytes: 10 * 1024 ** 4,
+      }),
+    ).resolves.toBeUndefined();
+  });
 });

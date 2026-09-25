@@ -1,15 +1,21 @@
 import { AUTH_BASE_PATH, createAuth } from '@testrex/auth';
 import type { ApiConfig, Logger } from '@testrex/config';
 import type { Database } from '@testrex/db';
+import { createStorage, type StorageAdapter } from '@testrex/storage';
 import type { FastifyInstance } from 'fastify';
 import { authBridge } from './http/auth-bridge';
 import { forbidden, registerErrorHandler } from './http/errors';
 import { createGuards } from './http/guards';
 import { applicationRoutes } from './routes/applications';
+import { attachmentRoutes } from './routes/attachments';
 import { auditRoutes } from './routes/audit';
+import { collaborationRoutes } from './routes/collaboration';
 import { invitationRoutes } from './routes/invitations';
 import { memberRoutes } from './routes/members';
+import { moduleRoutes } from './routes/modules';
 import { organizationRoutes } from './routes/organizations';
+import { revisionRoutes } from './routes/revisions';
+import { scenarioRoutes } from './routes/scenarios';
 import { sessionRoutes } from './routes/session';
 import type { ApiServices } from './services/index';
 import { isInvited } from './services/invitations';
@@ -22,6 +28,7 @@ export interface CreateServicesOptions {
   db: Database;
   mailer?: Mailer;
   quota?: QuotaService;
+  storage?: StorageAdapter;
   now?: () => Date;
 }
 
@@ -35,6 +42,7 @@ export function createApiServices(options: CreateServicesOptions): ApiServices {
     now,
     mailer: options.mailer ?? createMailer(config, options.logger),
     quota: options.quota ?? unlimitedQuota,
+    storage: options.storage ?? createStorage(config),
     auth: createAuth({
       db,
       secret: config.APP_SECRET,
@@ -76,4 +84,9 @@ export async function registerApi(app: FastifyInstance, services: ApiServices): 
   await invitationRoutes(app, services, guards);
   await applicationRoutes(app, services, guards);
   await auditRoutes(app, services, guards);
+  await scenarioRoutes(app, services, guards);
+  await moduleRoutes(app, services, guards);
+  await revisionRoutes(app, services, guards);
+  await collaborationRoutes(app, services, guards);
+  await attachmentRoutes(app, services, guards);
 }

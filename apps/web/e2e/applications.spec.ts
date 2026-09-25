@@ -21,7 +21,7 @@ test('create, rename, archive and restore an application', async ({ page }) => {
   await expect(dialog.getByLabel('Key')).toHaveValue('PS');
   await dialog.getByLabel('Key').fill('PAY');
   await dialog.getByRole('button', { name: 'Create application' }).click();
-  await expect(page).toHaveURL(new RegExp(`/o/${slug}/a/PAY$`));
+  await expect(page).toHaveURL(new RegExp(`/o/${slug}/a/PAY/scenarios$`));
   await expect(page.getByRole('heading', { name: 'Payments Service' })).toBeVisible();
 
   // Rename; the key stays.

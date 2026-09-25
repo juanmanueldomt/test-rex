@@ -34,7 +34,7 @@ test.describe('app shell', () => {
     await page.getByRole('button', { name: 'Switch application' }).click();
     await expect(page.getByRole('menuitem', { name: /Beta Billing/ })).toHaveCount(0);
     await page.getByRole('menuitem', { name: /Alpha Web/ }).click();
-    await expect(page).toHaveURL(new RegExp(`/o/${alpha}/a/ALP$`));
+    await expect(page).toHaveURL(new RegExp(`/o/${alpha}/a/ALP/scenarios$`));
   });
 
   test('the command menu (Ctrl+K) jumps to an application', async ({ page }) => {
@@ -45,7 +45,7 @@ test.describe('app shell', () => {
     await expect(dialog).toBeVisible();
     await dialog.getByRole('combobox').fill('alpha web');
     await page.keyboard.press('Enter');
-    await expect(page).toHaveURL(new RegExp(`/o/${alpha}/a/ALP$`));
+    await expect(page).toHaveURL(new RegExp(`/o/${alpha}/a/ALP/scenarios$`));
     await expect(dialog).toBeHidden();
   });
 

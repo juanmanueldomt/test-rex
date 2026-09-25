@@ -4,6 +4,8 @@ import {
   hasOrgPermission,
   ORG_ROLES,
   renameOrgSchema,
+  SCENARIO_PRIORITIES,
+  SCENARIO_STATUSES,
   type AuditEvent,
   type CreateInvitationResponse,
   type OrgContext,
@@ -400,10 +402,20 @@ function InvitationsSection({ org }: { org: OrgContext }) {
 
 const ROLE_VALUES = new Set(['owner', 'admin', 'member', 'manager', 'editor', 'tester', 'viewer']);
 
+const STATUS_VALUES = new Set<string>(SCENARIO_STATUSES);
+const PRIORITY_VALUES = new Set<string>(SCENARIO_PRIORITIES);
+
 function formatValue(value: unknown, t: (key: string) => string): string {
   if (value === null || value === undefined || value === '') return '—';
+  if (Array.isArray(value)) {
+    return value.length ? value.map((item) => formatValue(item, t)).join(', ') : '—';
+  }
   if (typeof value === 'boolean') return value ? t('audit.yes') : t('audit.no');
   if (typeof value === 'string' && ROLE_VALUES.has(value)) return t(`roles.${value}`);
+  if (typeof value === 'string' && STATUS_VALUES.has(value)) return t(`scenario.status.${value}`);
+  if (typeof value === 'string' && PRIORITY_VALUES.has(value)) {
+    return t(`scenario.priority.${value}`);
+  }
   return String(value);
 }
 

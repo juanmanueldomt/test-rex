@@ -76,6 +76,13 @@ jobs:
         run: docker compose up -d
       - name: Wait for readiness (spec - healthy within 120 s)
         run: node scripts/smoke-test.mjs --timeout 120 http://localhost:8080/readyz http://localhost:8080/
+      - name: Verify attachments survive re-creating the app container
+        working-directory: deploy
+        run: |
+          node ../scripts/attachment-smoke.mjs upload http://localhost:8080 /tmp/attachment.json
+          docker compose up -d --force-recreate app
+          node ../scripts/smoke-test.mjs --timeout 120 http://localhost:8080/readyz
+          node ../scripts/attachment-smoke.mjs download http://localhost:8080 /tmp/attachment.json
       - name: Verify data survives restart
         working-directory: deploy
         run: |

@@ -14,7 +14,9 @@
     "retry": "Reintentar",
     "skip": "Omitir por ahora",
     "you": "tú",
-    "saved": "Cambios guardados"
+    "saved": "Cambios guardados",
+    "deletedUser": "Usuario eliminado",
+    "timeBy": "{{time}} · {{name}}"
   },
   "roles": {
     "owner": "Propietario",
@@ -53,6 +55,40 @@
     },
     "key": {
       "invalid": "De 2 a 10 mayúsculas o dígitos, empezando por una letra"
+    },
+    "title": {
+      "required": "Escribe un título",
+      "tooLong": "Usa como máximo 200 caracteres"
+    },
+    "tag": {
+      "required": "Escribe una etiqueta",
+      "invalid": "Las etiquetas usan letras, dígitos, «.», «_» o «-» y empiezan por una letra o un dígito, por ejemplo @smoke"
+    },
+    "tags": {
+      "tooMany": "Usa como máximo 20 etiquetas"
+    },
+    "version": {
+      "invalid": "Usa de 1 a 4 números separados por puntos, por ejemplo 3.2.1",
+      "inverted": "«Desde» no puede ser mayor que «hasta»"
+    },
+    "richText": {
+      "tooLong": "Usa como máximo 100.000 caracteres"
+    },
+    "module": {
+      "tooLong": "Usa como máximo 60 caracteres",
+      "notFound": "Elige un módulo existente"
+    },
+    "comment": {
+      "required": "Escribe un comentario",
+      "tooLong": "Usa como máximo 10.000 caracteres"
+    },
+    "url": {
+      "required": "Escribe una URL",
+      "tooLong": "Usa como máximo 2.000 caracteres",
+      "httpOnly": "Solo se permiten URL http y https"
+    },
+    "label": {
+      "tooLong": "Usa como máximo 200 caracteres"
     }
   },
   "errors": {
@@ -74,7 +110,19 @@
     "INVITATION_ACCEPTED": "Esta invitación ya se ha usado.",
     "INVITATION_REVOKED": "Esta invitación se canceló.",
     "FORBIDDEN": "No tienes permiso para hacer esto.",
-    "NOT_FOUND": "No encontrado."
+    "NOT_FOUND": "No encontrado.",
+    "VALIDATION_FAILED": "Algunos campos no son válidos.",
+    "SCENARIO_CHANGED": "{{changedBy}} cambió este escenario desde que lo abriste.",
+    "SCENARIO_DELETED": "Este escenario está eliminado. Restáuralo para hacer cambios.",
+    "MODULE_EXISTS": "Ya existe un módulo con ese nombre.",
+    "MODULE_IN_USE": "Este módulo lo usan {{count}} escenarios. Muévelos a otro módulo antes de eliminarlo.",
+    "MODULE_NOT_FOUND": "El módulo elegido ya no existe.",
+    "LINK_DUPLICATE": "Esta URL ya está vinculada al escenario.",
+    "LINK_LIMIT": "Un escenario puede tener como máximo {{max}} requisitos vinculados.",
+    "ATTACHMENT_NOT_ALLOWED": "El texto incluye imágenes que no pertenecen a este escenario.",
+    "NOT_COMMENT_AUTHOR": "Solo el autor puede cambiar este comentario.",
+    "FILE_REQUIRED": "Elige un archivo para subir.",
+    "FILE_TOO_LARGE": "El archivo es demasiado grande."
   },
   "auth": {
     "signInTitle": "Inicia sesión en testRex",
@@ -200,10 +248,7 @@
     "overview": "Resumen",
     "settings": "Ajustes",
     "archivedBanner": "Esta aplicación está archivada y es de solo lectura.",
-    "restore": "Restaurar",
-    "comingSoonTitle": "Los casos de prueba llegan pronto",
-    "comingSoonBody": "Aquí vivirán los casos de prueba, escenarios y ejecuciones de {{app}}. Por ahora puedes gestionar quién tiene acceso en los ajustes.",
-    "openSettings": "Abrir ajustes"
+    "restore": "Restaurar"
   },
   "appSettings": {
     "title": "Ajustes de la aplicación",
@@ -311,6 +356,35 @@
         "archived": "Archivó una aplicación",
         "restored": "Restauró una aplicación",
         "member_role_changed": "Cambió el acceso a una aplicación"
+      },
+      "scenario": {
+        "created": "Creó un escenario",
+        "updated": "Editó un escenario",
+        "deleted": "Eliminó un escenario",
+        "restored": "Restauró un escenario",
+        "revision_restored": "Restauró una revisión de escenario"
+      },
+      "module": {
+        "created": "Creó un módulo",
+        "renamed": "Renombró un módulo",
+        "deleted": "Eliminó un módulo"
+      },
+      "tag": {
+        "created": "Creó una etiqueta"
+      },
+      "comment": {
+        "created": "Comentó",
+        "edited": "Editó un comentario",
+        "deleted": "Eliminó un comentario"
+      },
+      "requirement_link": {
+        "added": "Vinculó un requisito",
+        "updated": "Editó un enlace a requisito",
+        "removed": "Quitó un enlace a requisito"
+      },
+      "attachment": {
+        "uploaded": "Subió un archivo",
+        "removed": "Quitó un archivo"
       }
     },
     "fields": {
@@ -319,7 +393,23 @@
       "key": "Clave",
       "role": "Rol",
       "description": "Descripción",
-      "archived": "Archivada"
+      "archived": "Archivada",
+      "title": "Título",
+      "status": "Estado",
+      "priority": "Prioridad",
+      "module": "Módulo",
+      "tags": "Etiquetas",
+      "versionFrom": "Compatible desde",
+      "versionTo": "Hasta",
+      "stepsToReach": "Pasos para llegar",
+      "deleted": "Eliminado",
+      "revision": "Revisión",
+      "comment": "Comentario",
+      "author": "Autor",
+      "link": "Enlace",
+      "label": "Etiqueta",
+      "file": "Archivo",
+      "size": "Tamaño (bytes)"
     },
     "yes": "Sí",
     "no": "No",
@@ -330,5 +420,275 @@
     "body": "Esta página no existe o no tienes acceso a ella. Si alguien te compartió este enlace, pídele que te invite.",
     "home": "Ir a mis organizaciones",
     "signIn": "Iniciar sesión"
+  },
+  "workspace": {
+    "tabs": {
+      "label": "Secciones de la aplicación",
+      "scenarios": "Escenarios de prueba",
+      "runs": "Ejecuciones"
+    },
+    "runsTitle": "Las ejecuciones están en construcción",
+    "runsBody": "Pronto podrás ejecutar aquí escenarios de prueba y sus casos de prueba y seguir los resultados de cada ejecución."
+  },
+  "shortcuts": {
+    "title": "Atajos de teclado",
+    "body": "Atajos disponibles en esta página.",
+    "help": "Mostrar los atajos de teclado",
+    "then": "luego",
+    "off": "(desactivado)",
+    "singleKeys": "Atajos de una sola tecla",
+    "singleKeysHint": "Desactívalos para usar solo atajos con Ctrl o ⌘. Esc sigue funcionando. Se recuerda en este navegador.",
+    "commandMenu": "Abrir el menú de comandos",
+    "goScenarios": "Ir a escenarios de prueba",
+    "goRuns": "Ir a ejecuciones",
+    "newScenario": "Nuevo escenario",
+    "focusSearch": "Buscar escenarios",
+    "nextRow": "Seleccionar el siguiente escenario",
+    "previousRow": "Seleccionar el escenario anterior",
+    "openRow": "Abrir el escenario seleccionado",
+    "edit": "Editar el escenario",
+    "save": "Guardar",
+    "cancel": "Cancelar o cerrar",
+    "groups": {
+      "general": "General",
+      "navigation": "Navegación",
+      "scenarios": "Escenarios",
+      "editing": "Edición"
+    }
+  },
+  "scenarios": {
+    "new": "Nuevo escenario",
+    "searchLabel": "Buscar escenarios",
+    "searchPlaceholder": "Buscar por clave, título, texto o requisito…",
+    "gridLabel": "Escenarios de prueba",
+    "loading": "Cargando escenarios…",
+    "columns": {
+      "key": "Clave",
+      "title": "Título",
+      "status": "Estado",
+      "module": "Módulo",
+      "priority": "Prioridad",
+      "tags": "Etiquetas",
+      "testCases": "Casos de prueba",
+      "author": "Autor",
+      "updated": "Actualizado"
+    },
+    "filters": {
+      "label": "Filtros",
+      "active": "Filtros activos",
+      "status": "Estado",
+      "priority": "Prioridad",
+      "module": "Módulo",
+      "author": "Autor",
+      "tags": "Etiquetas",
+      "tagsSearch": "Buscar etiquetas",
+      "noTags": "No se encontraron etiquetas",
+      "version": "Versión",
+      "versionLabel": "Compatible con la versión",
+      "versionHint": "Por ejemplo 3.2",
+      "apply": "Aplicar",
+      "showDeleted": "Mostrar eliminados",
+      "noModule": "Sin módulo",
+      "remove": "Quitar el filtro {{filter}}",
+      "clearAll": "Quitar todos"
+    },
+    "deleted": "Eliminado",
+    "moreTags_one": "{{count}} etiqueta más",
+    "moreTags_other": "{{count}} etiquetas más",
+    "andMore_one": "y {{count}} más",
+    "andMore_other": "y {{count}} más",
+    "filterByTag": "Filtrar por {{tag}}",
+    "emptyTitle": "Todavía no hay escenarios de prueba",
+    "emptyBody": "Un escenario de prueba describe una funcionalidad o un flujo bajo prueba y agrupa sus casos de prueba, como un archivo spec de Playwright.",
+    "noMatches": "Ningún escenario coincide",
+    "noMatchesBody": "Prueba con otras palabras o quita algunos filtros.",
+    "clearFilters": "Quitar filtros",
+    "range": "{{from}}–{{to}} de {{total}}",
+    "pageSize": "Filas por página",
+    "pagination": "Páginas",
+    "previousPage": "Página anterior",
+    "nextPage": "Página siguiente",
+    "page": "Página {{page}}"
+  },
+  "scenario": {
+    "status": {
+      "draft": "Borrador",
+      "ready": "Listo",
+      "deprecated": "Obsoleto"
+    },
+    "priority": {
+      "critical": "Crítica",
+      "high": "Alta",
+      "medium": "Media",
+      "low": "Baja"
+    },
+    "fields": {
+      "title": "Título",
+      "status": "Estado",
+      "priority": "Prioridad",
+      "module": "Módulo",
+      "tags": "Etiquetas",
+      "versionFrom": "Compatible desde",
+      "versionTo": "Hasta",
+      "versionRange": "Versiones compatibles",
+      "description": "Descripción",
+      "stepsToReach": "Pasos para llegar"
+    },
+    "descriptionPlaceholder": "Qué cubre este escenario y por qué importa…",
+    "stepsToReachPlaceholder": "Precondiciones, datos de prueba y cómo llegar. Usa encabezados para separar secciones.",
+    "noDescription": "Sin descripción.",
+    "noSteps": "Sin pasos para llegar.",
+    "noModule": "Sin módulo",
+    "noTags": "Sin etiquetas",
+    "anyVersion": "Todas las versiones",
+    "from": "{{version}} y posteriores",
+    "upTo": "hasta {{version}}",
+    "fromTo": "{{from}} – {{to}}",
+    "revision": "r{{number}}",
+    "currentRevision": "Revisión actual",
+    "breadcrumb": "Ruta de navegación",
+    "properties": "Propiedades del escenario",
+    "author": "Creado",
+    "lastUpdate": "Última actualización",
+    "tabs": {
+      "details": "Detalles",
+      "cases": "Casos de prueba ({{count}})",
+      "history": "Historial"
+    },
+    "casesTitle": "Los casos de prueba llegarán pronto",
+    "casesBody": "Cada caso de prueba pertenecerá a este escenario, como un test dentro de un archivo spec de Playwright.",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "restore": "Restaurar",
+    "deleteTitle": "¿Eliminar {{key}}?",
+    "deleteBody": "Desaparece de la lista de escenarios, pero conserva su clave, historial, comentarios y adjuntos. Puedes restaurarlo después.",
+    "deleted": "Escenario eliminado",
+    "restored": "Escenario restaurado",
+    "deletedBanner": "{{name}} eliminó este escenario {{when}}. Es de solo lectura hasta que se restaure."
+  },
+  "form": {
+    "label": "Escenario",
+    "newTitle": "Nuevo escenario de prueba",
+    "editTitle": "Editar {{key}}",
+    "create": "Crear escenario",
+    "save": "Guardar",
+    "saveHint": "Ctrl+S o ⌘S guarda.",
+    "created": "{{key}} creado",
+    "saved": "Cambios guardados",
+    "noChanges": "No cambió nada, así que no se creó una revisión.",
+    "moduleNone": "Sin módulo",
+    "moduleSearch": "Buscar o crear un módulo",
+    "moduleEmpty": "Todavía no hay módulos",
+    "moduleCreate": "Crear el módulo «{{name}}»",
+    "moduleCreated": "Módulo {{name}} creado",
+    "moduleExists": "El módulo {{name}} ya existe y se seleccionó.",
+    "tagsPlaceholder": "Añadir etiquetas",
+    "tagsSearch": "Escribe una etiqueta",
+    "tagsEmpty": "Escribe para añadir una etiqueta",
+    "tagCreate": "Añadir {{tag}}",
+    "tagsHint": "Se muestran como etiquetas de Playwright, por ejemplo @smoke.",
+    "versionHint": "Por ejemplo 3.2.1. Déjalo vacío para no poner límite.",
+    "unsavedTitle": "¿Descartar los cambios sin guardar?",
+    "unsavedBody": "Tus cambios en este escenario no se han guardado.",
+    "discard": "Descartar cambios",
+    "keepEditing": "Seguir editando",
+    "conflictTitle": "Otra persona cambió este escenario",
+    "conflictBody": "{{name}} guardó r{{revision}} {{when}}. Tus cambios no se guardaron; siguen en el formulario para que puedas copiarlos.",
+    "conflictCompare": "Comparar r{{base}} con r{{latest}}",
+    "conflictKeep": "Conservar mis cambios",
+    "conflictReload": "Descartar los míos y cargar lo último"
+  },
+  "editor": {
+    "toolbar": "Formato de {{field}}",
+    "heading2": "Encabezado",
+    "heading3": "Subencabezado",
+    "bold": "Negrita",
+    "italic": "Cursiva",
+    "strike": "Tachado",
+    "code": "Código en línea",
+    "bulletList": "Lista con viñetas",
+    "orderedList": "Lista numerada",
+    "taskList": "Lista de verificación",
+    "codeBlock": "Bloque de código",
+    "table": "Insertar tabla",
+    "link": "Enlace",
+    "linkPrompt": "URL del enlace (déjala vacía para quitar el enlace)",
+    "image": "Insertar imagen"
+  },
+  "history": {
+    "title": "Historial",
+    "created": "Creó el escenario",
+    "restoredFrom": "Restauró r{{number}}",
+    "changed": "{{field}} cambió",
+    "change": "{{field}}: {{from}} → {{to}}",
+    "none": "ninguno",
+    "current": "actual",
+    "view": "Ver r{{number}}",
+    "compare": "Comparar",
+    "compareWith": "Comparar r{{from}} con r{{to}}"
+  },
+  "revision": {
+    "banner": "Estás viendo r{{number}} de {{latest}}, guardada {{when}} por {{name}}.",
+    "isCurrent": "Es la revisión actual.",
+    "openCurrent": "Abrir la actual",
+    "restore": "Restaurar esta revisión",
+    "restoreTitle": "¿Restaurar r{{number}}?",
+    "restoreBody": "Se crea una revisión nueva con el contenido de r{{number}}. No se elimina ninguna revisión.",
+    "restored": "r{{number}} restaurada como r{{revision}}",
+    "notFound": "Esta revisión no existe.",
+    "backToHistory": "Volver al historial"
+  },
+  "compare": {
+    "title": "Comparar revisiones de {{key}}",
+    "from": "Desde",
+    "to": "Hasta",
+    "field": "Campo",
+    "fields": "Campos cambiados",
+    "identical": "Estas revisiones tienen el mismo contenido.",
+    "added": "Añadido",
+    "removed": "Eliminado"
+  },
+  "comments": {
+    "title": "Comentarios",
+    "label": "Comentario",
+    "placeholder": "Escribe un comentario. Admite Markdown.",
+    "write": "Escribir",
+    "preview": "Vista previa",
+    "nothingToPreview": "No hay nada que mostrar.",
+    "add": "Comentar",
+    "edit": "Editar comentario",
+    "delete": "Eliminar comentario",
+    "deleteTitle": "¿Eliminar este comentario?",
+    "deleteBody": "Se quitará de la conversación.",
+    "deleted": "Comentario eliminado",
+    "edited": "editado",
+    "onRevision": "en r{{number}}",
+    "empty": "Todavía no hay comentarios."
+  },
+  "links": {
+    "title": "Requisitos",
+    "add": "Añadir enlace",
+    "url": "URL",
+    "label": "Etiqueta (opcional)",
+    "edit": "Editar el enlace {{name}}",
+    "remove": "Quitar el enlace {{name}}",
+    "removeTitle": "¿Quitar este enlace?",
+    "empty": "No hay requisitos vinculados.",
+    "opensNewTab": "(se abre en una pestaña nueva)"
+  },
+  "attachments": {
+    "title": "Adjuntos",
+    "upload": "Adjuntar archivos",
+    "drop": "Suelta archivos aquí o",
+    "choose": "elige archivos",
+    "uploading": "Subiendo {{name}}…",
+    "tooLarge": "{{name}} supera el límite de {{limit}}.",
+    "failed": "No se pudo subir {{name}}.",
+    "empty": "No hay adjuntos.",
+    "download": "Descargar {{name}}",
+    "remove": "Quitar {{name}}",
+    "removeTitle": "¿Quitar {{name}}?",
+    "removeBody": "Desaparece de esta lista. Las revisiones anteriores que lo muestran lo siguen mostrando.",
+    "removed": "Adjunto quitado"
   }
 }

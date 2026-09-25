@@ -50,6 +50,9 @@ describe('creating applications', () => {
       'app.read',
       'execution.write',
       'testcase.write',
+      'scenario.write',
+      'comment.write',
+      'comment.moderate',
       'app.manage',
     ]);
   });

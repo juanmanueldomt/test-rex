@@ -7,25 +7,38 @@ import {
   Outlet,
   redirect,
 } from '@tanstack/react-router';
+import { TooltipProvider } from '@testrex/ui';
 import { Toaster } from 'sonner';
 import { OrgLayout } from './components/shell';
 import { isApiError } from './lib/api';
-import { appQuery, meQuery, orgQuery, queryClient } from './lib/queries';
+import { appQuery, meQuery, orgQuery, queryClient, scenarioQuery } from './lib/queries';
+import { ShortcutProvider } from './lib/shortcuts';
 import { useTheme } from './lib/theme';
-import { AppHomePage, ApplicationsPage } from './pages/applications';
+import { ApplicationsPage } from './pages/applications';
 import { AppSettingsPage, type AppSettingsTab } from './pages/AppSettingsPage';
 import { InvitePage, SignInPage, SignUpPage } from './pages/auth';
 import { NotFoundContent, NotFoundPage } from './pages/NotFoundPage';
 import { OnboardingPage } from './pages/OnboardingPage';
 import { OrgSettingsPage, type OrgSettingsTab } from './pages/OrgSettingsPage';
+import { ComparePage, RevisionPage } from './pages/scenarios/revisions';
+import { EditScenarioPage, NewScenarioPage } from './pages/scenarios/ScenarioForm';
+import {
+  ScenarioGridPage,
+  validateScenarioSearch,
+  type ScenarioSearch,
+} from './pages/scenarios/ScenarioGrid';
+import { SCENARIO_TABS, ScenarioPage, type ScenarioTab } from './pages/scenarios/ScenarioPage';
+import { AppShell, RunsPage, WorkspaceLayout } from './pages/scenarios/workspace';
 
 function Root() {
   const [theme] = useTheme();
   return (
-    <>
-      <Outlet />
-      <Toaster theme={theme} position="bottom-right" richColors closeButton />
-    </>
+    <TooltipProvider>
+      <ShortcutProvider>
+        <Outlet />
+        <Toaster theme={theme} position="bottom-right" richColors closeButton />
+      </ShortcutProvider>
+    </TooltipProvider>
   );
 }
 
@@ -175,15 +188,140 @@ const appRoute = createRoute({
       throw error;
     }
   },
+  component: AppShell,
   notFoundComponent: NotFoundContent,
 });
 
+/** The application home opens on the test scenarios tab. */
 const appIndexRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/',
-  component: function AppIndexRoute() {
-    const { orgSlug, appKey } = appIndexRoute.useParams();
-    return <AppHomePage orgSlug={orgSlug} appKey={appKey} />;
+  beforeLoad: ({ params }) => {
+    throw redirect({ to: '/o/$orgSlug/a/$appKey/scenarios', params, replace: true });
+  },
+});
+
+/** Header and tab bar shared by the scenarios and runs tabs. */
+const workspaceRoute = createRoute({
+  getParentRoute: () => appRoute,
+  id: 'workspace',
+  component: WorkspaceLayout,
+});
+
+const scenariosRoute = createRoute({
+  getParentRoute: () => workspaceRoute,
+  path: '/scenarios',
+  // Same schema as the API: search, filters, sort and paging live in the URL.
+  validateSearch: (search: Record<string, unknown>): ScenarioSearch =>
+    validateScenarioSearch(search),
+  component: function ScenariosRoute() {
+    const { orgSlug, appKey } = scenariosRoute.useParams();
+    return (
+      <ScenarioGridPage orgSlug={orgSlug} appKey={appKey} search={scenariosRoute.useSearch()} />
+    );
+  },
+});
+
+const runsRoute = createRoute({
+  getParentRoute: () => workspaceRoute,
+  path: '/runs',
+  component: RunsPage,
+});
+
+const newScenarioRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/scenarios/new',
+  component: function NewScenarioRoute() {
+    const { orgSlug, appKey } = newScenarioRoute.useParams();
+    return <NewScenarioPage orgSlug={orgSlug} appKey={appKey} />;
+  },
+});
+
+/** Unknown scenarios (and those of other applications) surface as not found. */
+async function loadScenario(
+  queryClient: QueryClient,
+  params: { orgSlug: string; appKey: string; scenarioKey: string },
+) {
+  try {
+    await queryClient.fetchQuery(scenarioQuery(params.orgSlug, params.appKey, params.scenarioKey));
+  } catch (error) {
+    if (isApiError(error, 404)) throw notFound();
+    throw error;
+  }
+}
+
+const scenarioRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/scenarios/$scenarioKey',
+  validateSearch: (search: Record<string, unknown>): { tab?: ScenarioTab } => ({
+    tab: SCENARIO_TABS.includes(search.tab as ScenarioTab)
+      ? (search.tab as ScenarioTab)
+      : undefined,
+  }),
+  loader: ({ context, params }) => loadScenario(context.queryClient, params),
+  component: function ScenarioRoute() {
+    const { orgSlug, appKey, scenarioKey } = scenarioRoute.useParams();
+    return (
+      <ScenarioPage
+        orgSlug={orgSlug}
+        appKey={appKey}
+        scenarioKey={scenarioKey}
+        tab={scenarioRoute.useSearch().tab ?? 'details'}
+      />
+    );
+  },
+});
+
+const editScenarioRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/scenarios/$scenarioKey/edit',
+  loader: ({ context, params }) => loadScenario(context.queryClient, params),
+  component: function EditScenarioRoute() {
+    const { orgSlug, appKey, scenarioKey } = editScenarioRoute.useParams();
+    return <EditScenarioPage orgSlug={orgSlug} appKey={appKey} scenarioKey={scenarioKey} />;
+  },
+});
+
+const revisionRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/scenarios/$scenarioKey/revisions/$number',
+  loader: ({ context, params }) => loadScenario(context.queryClient, params),
+  component: function RevisionRoute() {
+    const { orgSlug, appKey, scenarioKey, number } = revisionRoute.useParams();
+    return (
+      <RevisionPage
+        orgSlug={orgSlug}
+        appKey={appKey}
+        scenarioKey={scenarioKey}
+        number={Number(number.replace(/^r/i, '')) || 0}
+      />
+    );
+  },
+});
+
+const positive = (value: unknown) =>
+  Number.isInteger(Number(value)) && Number(value) > 0 ? Number(value) : undefined;
+
+const compareRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/scenarios/$scenarioKey/compare',
+  validateSearch: (search: Record<string, unknown>): { from?: number; to?: number } => ({
+    from: positive(search.from),
+    to: positive(search.to),
+  }),
+  loader: ({ context, params }) => loadScenario(context.queryClient, params),
+  component: function CompareRoute() {
+    const { orgSlug, appKey, scenarioKey } = compareRoute.useParams();
+    const { from, to } = compareRoute.useSearch();
+    return (
+      <ComparePage
+        orgSlug={orgSlug}
+        appKey={appKey}
+        scenarioKey={scenarioKey}
+        from={from}
+        to={to}
+      />
+    );
   },
 });
 
@@ -218,7 +356,16 @@ const routeTree = rootRoute.addChildren([
     orgRoute.addChildren([
       orgIndexRoute,
       orgSettingsRoute,
-      appRoute.addChildren([appIndexRoute, appSettingsRoute]),
+      appRoute.addChildren([
+        appIndexRoute,
+        workspaceRoute.addChildren([scenariosRoute, runsRoute]),
+        newScenarioRoute,
+        scenarioRoute,
+        editScenarioRoute,
+        revisionRoute,
+        compareRoute,
+        appSettingsRoute,
+      ]),
     ]),
   ]),
 ]);

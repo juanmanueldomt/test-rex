@@ -1,4 +1,4 @@
-import { expect, type APIRequestContext, type Page } from '@playwright/test';
+import { expect, type APIRequestContext, type Browser, type Page } from '@playwright/test';
 import { BASE_URL } from '../playwright.config';
 
 export const PASSWORD = 'correct-horse-battery';
@@ -96,4 +96,84 @@ export async function fillSignUp(
   if (email !== null) await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password').fill(password);
   await page.getByRole('button', { name: 'Create account' }).click();
+}
+
+export interface ScenarioInput {
+  title: string;
+  status?: string;
+  priority?: string;
+  moduleId?: string | null;
+  tags?: string[];
+  versionFrom?: string;
+  versionTo?: string;
+  description?: string;
+  stepsToReach?: string;
+}
+
+export async function createScenarioViaApi(
+  request: APIRequestContext,
+  orgSlug: string,
+  appKey: string,
+  input: ScenarioInput,
+): Promise<{ key: string; id: string; revision: number }> {
+  const res = await request.post(`/api/orgs/${orgSlug}/apps/${appKey}/scenarios`, {
+    data: input,
+    headers: origin,
+  });
+  expect(res.ok(), await res.text()).toBeTruthy();
+  return res.json();
+}
+
+export async function updateScenarioViaApi(
+  request: APIRequestContext,
+  orgSlug: string,
+  appKey: string,
+  key: string,
+  input: Partial<ScenarioInput> & { baseRevision: number },
+) {
+  const res = await request.patch(`/api/orgs/${orgSlug}/apps/${appKey}/scenarios/${key}`, {
+    data: input,
+    headers: origin,
+  });
+  expect(res.ok(), await res.text()).toBeTruthy();
+  return res.json();
+}
+
+export async function createModuleViaApi(
+  request: APIRequestContext,
+  orgSlug: string,
+  appKey: string,
+  name: string,
+): Promise<{ id: string; name: string }> {
+  const res = await request.post(`/api/orgs/${orgSlug}/apps/${appKey}/modules`, {
+    data: { name },
+    headers: origin,
+  });
+  expect(res.ok(), await res.text()).toBeTruthy();
+  return res.json();
+}
+
+/** A signed-in owner with a fresh organization and application CHK. */
+export async function ownerWithApp(request: APIRequestContext, name = 'Ana Owner') {
+  await registerViaApi(request, name);
+  const slug = await createOrgViaApi(request, unique('Scenario Org'));
+  await createAppViaApi(request, slug, 'Checkout Web', 'CHK');
+  return { slug, app: `/o/${slug}/a/CHK` };
+}
+
+/** Registers `name` in a new browser page, adds them to the organization with an app role. */
+export async function memberWithRole(
+  browser: Browser,
+  owner: APIRequestContext,
+  slug: string,
+  name: string,
+  role: 'manager' | 'editor' | 'tester' | 'viewer',
+) {
+  const email = uniqueEmail(name.split(' ')[0]);
+  const link = await inviteViaApi(owner, slug, email);
+  const page = await browser.newPage();
+  await registerViaApi(page.request, name, email);
+  await acceptViaApi(page.request, link);
+  await grantAppRoleViaApi(owner, slug, 'CHK', email, role);
+  return page;
 }
