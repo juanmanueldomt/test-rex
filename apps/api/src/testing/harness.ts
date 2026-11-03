@@ -13,6 +13,8 @@ import pg from 'pg';
 import { createApiServices, registerApi } from '../api';
 import { buildServer } from '../server';
 import type { ApiServices } from '../services/index';
+import { memoryQueue } from '../services/jobs';
+import type { ProviderFactory } from '../services/llm/providers';
 import type { MailMessage, Mailer } from '../services/mailer';
 import type { QuotaService } from '../services/quota';
 
@@ -32,12 +34,16 @@ export interface HarnessOptions {
   storage?: StorageAdapter;
   /** ATTACHMENT_MAX_BYTES. */
   attachmentMaxBytes?: number;
+  /** LLM provider used by AI endpoints (defaults to one that fails). */
+  llm?: ProviderFactory;
 }
 
 export interface Harness {
   app: FastifyInstance;
   services: ApiServices;
   database: TestDatabase;
+  /** Jobs the API sent to the worker. */
+  jobs: ReturnType<typeof memoryQueue>;
   /** Superuser pool for fixtures and assertions that must bypass RLS. */
   superPool: pg.Pool;
   client(): TestClient;
@@ -67,6 +73,7 @@ export async function createHarness(
       ? { ATTACHMENT_MAX_BYTES: String(options.attachmentMaxBytes) }
       : {}),
   });
+  const jobs = memoryQueue();
   const services = createApiServices({
     config,
     logger,
@@ -75,6 +82,12 @@ export async function createHarness(
     quota: options.quota,
     now: options.now,
     storage: options.storage ?? new LocalStorage(storageDir),
+    jobs,
+    llm:
+      options.llm ??
+      (() => {
+        throw new Error('No LLM provider in this test');
+      }),
   });
   const app = await buildServer({
     logger,
@@ -87,6 +100,7 @@ export async function createHarness(
     app,
     services,
     database,
+    jobs,
     superPool,
     client: () => new TestClient(app),
     async close() {

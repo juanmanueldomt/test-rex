@@ -36,6 +36,13 @@
       "when": 1790299360328,
       "tag": "0004_scenario_collaboration",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793725262768,
+      "tag": "0005_test_cases_and_runs",
+      "breakpoints": true
     }
   ]
 }

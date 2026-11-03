@@ -6,19 +6,26 @@ import type { FastifyInstance } from 'fastify';
 import { authBridge } from './http/auth-bridge';
 import { forbidden, registerErrorHandler } from './http/errors';
 import { createGuards } from './http/guards';
+import { aiRoutes } from './routes/ai';
 import { applicationRoutes } from './routes/applications';
 import { attachmentRoutes } from './routes/attachments';
 import { auditRoutes } from './routes/audit';
+import { automationRoutes } from './routes/automation';
 import { collaborationRoutes } from './routes/collaboration';
 import { invitationRoutes } from './routes/invitations';
 import { memberRoutes } from './routes/members';
 import { moduleRoutes } from './routes/modules';
 import { organizationRoutes } from './routes/organizations';
+import { recordingRoutes } from './routes/recordings';
 import { revisionRoutes } from './routes/revisions';
+import { runRoutes } from './routes/runs';
 import { scenarioRoutes } from './routes/scenarios';
 import { sessionRoutes } from './routes/session';
+import { testCaseRoutes } from './routes/test-cases';
 import type { ApiServices } from './services/index';
 import { isInvited } from './services/invitations';
+import { pgBossQueue, type JobQueue } from './services/jobs';
+import { defaultProviderFactory, type ProviderFactory } from './services/llm/providers';
 import { createMailer, type Mailer } from './services/mailer';
 import { unlimitedQuota, type QuotaService } from './services/quota';
 
@@ -29,6 +36,8 @@ export interface CreateServicesOptions {
   mailer?: Mailer;
   quota?: QuotaService;
   storage?: StorageAdapter;
+  jobs?: JobQueue;
+  llm?: ProviderFactory;
   now?: () => Date;
 }
 
@@ -43,6 +52,10 @@ export function createApiServices(options: CreateServicesOptions): ApiServices {
     mailer: options.mailer ?? createMailer(config, options.logger),
     quota: options.quota ?? unlimitedQuota,
     storage: options.storage ?? createStorage(config),
+    jobs:
+      options.jobs ??
+      pgBossQueue(config.DATABASE_MIGRATION_URL ?? config.DATABASE_URL, options.logger),
+    llm: options.llm ?? defaultProviderFactory,
     auth: createAuth({
       db,
       secret: config.APP_SECRET,
@@ -89,4 +102,10 @@ export async function registerApi(app: FastifyInstance, services: ApiServices): 
   await revisionRoutes(app, services, guards);
   await collaborationRoutes(app, services, guards);
   await attachmentRoutes(app, services, guards);
+  await testCaseRoutes(app, services, guards);
+  await automationRoutes(app, services, guards);
+  await runRoutes(app, services, guards);
+  await recordingRoutes(app, services, guards);
+  await aiRoutes(app, services, guards);
+  app.addHook('onClose', () => services.jobs.close());
 }

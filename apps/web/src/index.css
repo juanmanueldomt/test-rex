@@ -4,6 +4,25 @@
 
 @source '../../../packages/ui/src';
 
+/* Result colors of charts and progress bars, validated for color-vision deficiencies
+   (dataviz validate_palette) in the stacking order failed · skipped · blocked · passed, so red
+   and green never touch. Skipped is a deliberate neutral; every chart also has a legend and a
+   table, so no color carries meaning alone. */
+:root {
+  --chart-passed: #047857;
+  --chart-blocked: #d97706;
+  --chart-skipped: #94a3b8;
+  --chart-failed: #b91c1c;
+  --chart-pending: #e2e8f0;
+}
+.dark {
+  --chart-passed: #059669;
+  --chart-blocked: #ea580c;
+  --chart-skipped: #64748b;
+  --chart-failed: #ef4444;
+  --chart-pending: #334155;
+}
+
 /* Rendered Markdown (editor and read-only views). */
 @layer components {
   .rich-text .ProseMirror > * + *,

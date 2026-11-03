@@ -8,9 +8,29 @@
 
 ---
 
-testRex stores your **test cases**, **test scenarios** and **test runs**, organized by
-organization and application, links them to your existing **Playwright** repository, and
-uses the LLM provider of your choice to **generate Playwright tests** from test cases.
+testRex stores your **test scenarios**, **test cases** and **test runs**, organized by
+organization and application. Test cases run automatically with **Playwright** (or by hand),
+can be recorded in a browser, and can be drafted, improved and fixed with the **LLM provider
+of your choice**.
+
+- **Test cases** verify one or more scenarios with ordered steps; **expected results and
+  assertions are highlighted** wherever a test case is shown. Every save is a version.
+- **Automated** by default (the worker runs the steps with the Playwright library) or
+  **manual** (testers follow the steps and record each result). A **dataset** runs a test
+  case once per row, with `{{column}}` values in its steps.
+- **Global steps** run before or after every test case or every run, like Playwright hooks;
+  a sign-in before the run is shared by every test case.
+- **Record** steps by clicking through your application in a browser that testRex runs, or
+  import code from `npx playwright codegen`. Every test case and scenario shows its
+  **Playwright code**, ready to copy or download.
+- **Test runs** end with a full report: pass rate, duration, results per scenario and per
+  step, the failing step and error, screenshots, Playwright traces and console errors,
+  exportable as JSON or JUnit XML. The **Reports** tab shows trends, the most failing, flaky
+  and slowest test cases, and scenario health across runs.
+- **AI assistance** with your own key (Anthropic, or any OpenAI-compatible endpoint such as
+  OpenAI, Azure OpenAI or Ollama): generate test cases for a scenario, improve one from an
+  instruction, or fix a failed automated test from its failure. Nothing is saved until you
+  accept the proposal.
 
 > **Status:** early development. See the [architecture and roadmap](docs/ARCHITECTURE.md).
 
@@ -56,6 +76,16 @@ With S3, attachments never touch the containers' disks. `/readyz` reports a `sto
 check and stays unavailable, naming the problem, while the directory is not writable or
 the bucket cannot be used.
 
+### Running automated tests
+
+Set the application's **base URL** in _Automation → Settings_. Automated tests and
+recordings run in the worker container, so the address must be reachable from there: for an
+application on the Docker host, use `http://host.docker.internal:<port>`. Each run can
+override the base URL and the browser (Chromium, Firefox or WebKit).
+
+To use AI assistance, an organization admin chooses the provider, model and API key in
+_Organization settings → AI_. The key is encrypted with `APP_SECRET` and never shown again.
+
 ## Development
 
 Requirements: Node 22+, pnpm (via `corepack enable`), Docker (for integration tests).
@@ -74,17 +104,17 @@ proposals live in [`openspec/changes`](openspec/changes) and accepted behavior i
 
 ## Repository layout
 
-| Path                 | Purpose                                            |
-| -------------------- | -------------------------------------------------- |
-| `apps/web`           | React single-page app                              |
-| `apps/api`           | Fastify API server; also serves the web app        |
-| `apps/worker`        | Background jobs (git, generation, Playwright runs) |
-| `packages/config`    | Environment configuration and logging              |
-| `packages/db`        | Database client, schema and migrations             |
-| `packages/storage`   | File storage adapters (local directory, S3)        |
-| `packages/contracts` | Schemas shared by API and web                      |
-| `packages/ui`        | UI component library                               |
-| `deploy`             | Dockerfiles and Docker Compose                     |
+| Path                 | Purpose                                          |
+| -------------------- | ------------------------------------------------ |
+| `apps/web`           | React single-page app                            |
+| `apps/api`           | Fastify API server; also serves the web app      |
+| `apps/worker`        | Background jobs (Playwright runs and recordings) |
+| `packages/config`    | Environment configuration and logging            |
+| `packages/db`        | Database client, schema and migrations           |
+| `packages/storage`   | File storage adapters (local directory, S3)      |
+| `packages/contracts` | Schemas shared by API and web                    |
+| `packages/ui`        | UI component library                             |
+| `deploy`             | Dockerfiles and Docker Compose                   |
 
 ## License
 

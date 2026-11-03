@@ -268,6 +268,9 @@ const optionalText = (max: number) =>
     z.string().max(max).optional(),
   );
 
+/** Query-string helpers shared by the list queries of other entities. */
+export { csv as csvParam, optionalText as optionalTextParam };
+
 export const MODULE_NONE = 'none';
 
 export const scenarioListQuerySchema = z.object({

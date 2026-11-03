@@ -1,7 +1,8 @@
 import { sql } from 'drizzle-orm';
 import type { Transaction } from './client';
 
-export type SequenceKind = 'TS' | 'TC';
+/** `TS` scenarios, `TC` test cases, `TR` test runs. */
+export type SequenceKind = 'TS' | 'TC' | 'TR';
 
 /**
  * Hands out the next number of a per-application counter (`CHK-TS-<n>`), starting at 1. The

@@ -101,6 +101,23 @@ export const AUDIT_ACTIONS = [
   'requirement_link.removed',
   'attachment.uploaded',
   'attachment.removed',
+  'test_case.created',
+  'test_case.updated',
+  'test_case.deleted',
+  'test_case.restored',
+  'test_case.version_restored',
+  'dataset.created',
+  'dataset.updated',
+  'dataset.deleted',
+  'global_step.created',
+  'global_step.updated',
+  'global_step.deleted',
+  'automation.updated',
+  'run.created',
+  'run.cancelled',
+  'run.completed',
+  'run_item.executed',
+  'llm.settings_updated',
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
 
