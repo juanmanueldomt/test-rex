@@ -40,6 +40,11 @@ nothing when the action is not allowed.
 - **WHEN** an editor presses `c` on the test cases tab
 - **THEN** the new test case form opens
 
+#### Scenario: Go to a tab with keyboard
+
+- **WHEN** an editor on the Test scenarios tab presses `g` and then `c`
+- **THEN** the Test cases tab opens and no new scenario form opens
+
 #### Scenario: Typing does not trigger shortcuts
 
 - **WHEN** a user types the letter `c` in the search box

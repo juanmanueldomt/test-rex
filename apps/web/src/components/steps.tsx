@@ -101,7 +101,7 @@ export function ExpectedResult({ children }: { children: ReactNode }) {
     <div className="mt-2 flex items-start gap-2 rounded-md border border-primary/40 bg-accent/60 px-3 py-2 text-sm text-accent-foreground">
       <ShieldCheck className="mt-0.5 size-4 shrink-0" aria-hidden />
       <p>
-        <span className="mr-1 font-semibold">{t('steps.expected')}:</span>
+        <span className="font-semibold">{t('steps.expected')}:</span>{' '}
         <span className="font-medium">{children}</span>
       </p>
     </div>

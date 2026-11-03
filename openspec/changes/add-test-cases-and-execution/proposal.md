@@ -28,8 +28,9 @@ a browser and asking an LLM to draft or fix tests must be part of it from the st
 - **Global steps** (hooks) per application in four phases: **before test run**, **before each
   test case**, **after each test case**, **after test run**. Browser state left by "before test
   run" (for example a login) is shared with every test case.
-- **Playwright code**: every test case, scenario and run selection can be viewed and
-  downloaded as a `@playwright/test` spec, generated from the same steps the engine executes.
+- **Playwright code**: every test case, and every scenario (all of its test cases), can be
+  viewed and downloaded as a `@playwright/test` spec, generated from the same steps the engine
+  executes.
 - **Recordings**: an in-app **recorder** drives a real browser in the worker; the user clicks
   and types on a live view, testRex writes steps with robust locators (test id, role and name,
   label, …) and assertions picked from the page, then saves them into a test case. Code

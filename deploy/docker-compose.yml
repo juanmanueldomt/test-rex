@@ -72,6 +72,10 @@ services:
       - storage:/data/storage
     # Browsers need more shared memory than Docker's 64 MB default.
     shm_size: 1gb
+    # Lets automated tests reach an application running on the Docker host, with a base URL
+    # such as http://host.docker.internal:3000 (Docker Desktop provides this name already).
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
 
 volumes:
   pgdata:

@@ -35,6 +35,17 @@ text, title, text, CSS. Consecutive typing into one field MUST be recorded as on
 - **WHEN** an editor clicks the "Email" field and types `ana@example.com` in several bursts
 - **THEN** one step `Fill label "Email" with "ana@example.com"` is recorded
 
+### Requirement: Portable recorded addresses
+
+Addresses on the origin of the application's base URL SHALL be recorded as paths, in
+navigation steps and URL assertions and when importing codegen output, so a recorded test runs
+against any environment a run targets.
+
+#### Scenario: Recording on a staging site
+
+- **WHEN** the base URL is `https://staging.shop.test` and an editor starts recording at `https://staging.shop.test/login`
+- **THEN** the first step is `Go to /login`
+
 ### Requirement: Assertions while recording
 
 In assertion mode, clicking an element SHALL not interact with the page and SHALL offer
