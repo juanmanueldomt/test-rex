@@ -3,7 +3,12 @@
  * a billing-aware implementation can throw an ApiError (e.g. 402) to refuse an action.
  */
 export type QuotaAction =
-  'organization.create' | 'application.create' | 'member.add' | 'storage.upload';
+  | 'organization.create'
+  | 'application.create'
+  | 'member.add'
+  | 'storage.upload'
+  /** One call to the organization's LLM provider. */
+  | 'llm.request';
 
 export interface QuotaContext {
   organizationId?: string;

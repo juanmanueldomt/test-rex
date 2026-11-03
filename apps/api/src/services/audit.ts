@@ -4,7 +4,17 @@ import { schema, type Transaction } from '@testrex/db';
 export interface AuditInput {
   action: AuditAction;
   targetType:
-    'organization' | 'user' | 'application' | 'invitation' | 'scenario' | 'module' | 'tag';
+    | 'organization'
+    | 'user'
+    | 'application'
+    | 'invitation'
+    | 'scenario'
+    | 'module'
+    | 'tag'
+    | 'test_case'
+    | 'dataset'
+    | 'global_step'
+    | 'run';
   targetId?: string | null;
   targetLabel?: string | null;
   changes?: Record<string, { from: unknown; to: unknown }>;

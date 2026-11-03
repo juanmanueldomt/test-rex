@@ -385,6 +385,37 @@
       "attachment": {
         "uploaded": "Subió un archivo",
         "removed": "Quitó un archivo"
+      },
+      "test_case": {
+        "created": "Creó un caso de prueba",
+        "updated": "Editó un caso de prueba",
+        "deleted": "Eliminó un caso de prueba",
+        "restored": "Restauró un caso de prueba",
+        "version_restored": "Restauró una versión de un caso de prueba"
+      },
+      "dataset": {
+        "created": "Creó un dataset",
+        "updated": "Editó un dataset",
+        "deleted": "Eliminó un dataset"
+      },
+      "global_step": {
+        "created": "Creó un paso global",
+        "updated": "Editó un paso global",
+        "deleted": "Eliminó un paso global"
+      },
+      "automation": {
+        "updated": "Cambió la configuración de automatización"
+      },
+      "run": {
+        "created": "Inició una ejecución",
+        "cancelled": "Canceló una ejecución",
+        "completed": "Completó una ejecución"
+      },
+      "run_item": {
+        "executed": "Registró un resultado manual"
+      },
+      "llm": {
+        "settings_updated": "Cambió la configuración del proveedor de IA"
       }
     },
     "fields": {

@@ -598,6 +598,13 @@ export async function scenarioView(
     .select({ n: count() })
     .from(schema.attachments)
     .where(and(eq(schema.attachments.scenarioId, row.id), isNull(schema.attachments.deletedAt)));
+  const testCases = await tx
+    .select({ n: count() })
+    .from(schema.testCaseScenarios)
+    .innerJoin(schema.testCases, eq(schema.testCases.id, schema.testCaseScenarios.testCaseId))
+    .where(
+      and(eq(schema.testCaseScenarios.scenarioId, row.id), isNull(schema.testCases.deletedAt)),
+    );
   const label = (number: number) => labels.find((l) => l.number === number)?.label ?? '';
   return {
     id: row.id,
@@ -608,7 +615,7 @@ export async function scenarioView(
     priority: row.priority,
     module,
     tags: tags.map((tag) => tag.name),
-    testCaseCount: 0,
+    testCaseCount: testCases[0]?.n ?? 0,
     author: userRef(names, row.createdBy, label(1)),
     createdAt: row.createdAt.toISOString(),
     updatedBy: userRef(names, row.updatedBy, label(row.currentRevision)),

@@ -32,6 +32,7 @@ import { badRequest, parse } from '../http/errors';
 import { inOrg, type Guards } from '../http/guards';
 import { audit } from '../services/audit';
 import type { ApiServices } from '../services/index';
+import { testCaseCounts } from '../services/test-cases';
 import {
   assertBaseRevision,
   assertNotDeleted,
@@ -191,6 +192,10 @@ export async function listScenarios(
     .limit(query.size)
     .offset((page - 1) * query.size);
   const user = (id: string | null, name: string | null): UserRef => ({ id, name: name ?? '' });
+  const caseCounts = await testCaseCounts(
+    tx,
+    rows.map(({ row }) => row.id),
+  );
   const items = rows.map(
     ({ row, moduleName, creatorName, updaterName, tags }): ScenarioListItem => ({
       id: row.id,
@@ -201,8 +206,7 @@ export async function listScenarios(
       priority: row.priority,
       module: row.moduleId ? { id: row.moduleId, name: moduleName ?? '' } : null,
       tags,
-      // Test cases arrive with the next change.
-      testCaseCount: 0,
+      testCaseCount: caseCounts.get(row.id) ?? 0,
       author: user(row.createdBy, creatorName),
       createdAt: row.createdAt.toISOString(),
       updatedBy: user(row.updatedBy, updaterName),

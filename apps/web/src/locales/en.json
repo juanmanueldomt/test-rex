@@ -385,6 +385,37 @@
       "attachment": {
         "uploaded": "Uploaded file",
         "removed": "Removed file"
+      },
+      "test_case": {
+        "created": "Created test case",
+        "updated": "Edited test case",
+        "deleted": "Deleted test case",
+        "restored": "Restored test case",
+        "version_restored": "Restored a test case version"
+      },
+      "dataset": {
+        "created": "Created dataset",
+        "updated": "Edited dataset",
+        "deleted": "Deleted dataset"
+      },
+      "global_step": {
+        "created": "Created global step",
+        "updated": "Edited global step",
+        "deleted": "Deleted global step"
+      },
+      "automation": {
+        "updated": "Changed automation settings"
+      },
+      "run": {
+        "created": "Started test run",
+        "cancelled": "Cancelled test run",
+        "completed": "Completed test run"
+      },
+      "run_item": {
+        "executed": "Recorded a manual result"
+      },
+      "llm": {
+        "settings_updated": "Changed AI provider settings"
       }
     },
     "fields": {
