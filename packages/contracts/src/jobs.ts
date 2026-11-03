@@ -14,6 +14,13 @@ export const JOB_QUEUES = {
   recordingSession: 'recordings.session',
 } as const;
 
+/** Queue settings shared by the API (producer) and the worker (both create the queues). */
+export const JOB_QUEUE_OPTIONS: Record<string, { expireInSeconds: number; retryLimit: number }> = {
+  // A run must not be executed twice; stuck runs are cancelled by people.
+  [JOB_QUEUES.runExecute]: { expireInSeconds: 2 * 60 * 60, retryLimit: 0 },
+  [JOB_QUEUES.recordingSession]: { expireInSeconds: 40 * 60, retryLimit: 0 },
+};
+
 export const runJobPayload = tenantJobPayload.extend({ runId: z.uuid() });
 export type RunJobPayload = z.infer<typeof runJobPayload>;
 

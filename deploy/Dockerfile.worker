@@ -18,10 +18,14 @@ LABEL org.opencontainers.image.title="testrex-worker" \
       org.opencontainers.image.version="${APP_VERSION}" \
       org.opencontainers.image.revision="${GIT_COMMIT}" \
       org.opencontainers.image.licenses="MIT OR Apache-2.0"
-# Playwright CLI matching the preinstalled browsers.
-RUN npm install -g playwright@${PLAYWRIGHT_VERSION} && npm cache clean --force
 ENV NODE_ENV=production HEALTH_PORT=8081 STORAGE_DIR=/data/storage
 WORKDIR /app
+# The Playwright library (not bundled) matching the preinstalled browsers in /ms-playwright,
+# plus its CLI for maintenance.
+RUN printf '{"name":"testrex-worker-runtime","private":true,"type":"module"}' > package.json \
+  && npm install --omit=dev --no-audit --no-fund playwright-core@${PLAYWRIGHT_VERSION} \
+  && npm install -g playwright@${PLAYWRIGHT_VERSION} \
+  && npm cache clean --force
 COPY --from=build /repo/apps/worker/dist ./dist
 COPY --from=build /repo/packages/db/migrations ./migrations
 # Attachment storage shared with the app image, where files belong to node (uid/gid 1000).

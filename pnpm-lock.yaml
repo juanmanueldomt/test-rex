@@ -414,6 +414,9 @@ importers:
       pg-boss:
         specifier: ^12.33.6
         version: 12.33.6
+      playwright-core:
+        specifier: 1.63.0
+        version: 1.63.0
       zod:
         specifier: ^4.6.5
         version: 4.6.5

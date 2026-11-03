@@ -1,5 +1,5 @@
 import type { Logger } from '@testrex/config';
-import { JOB_QUEUES } from '@testrex/contracts';
+import { JOB_QUEUE_OPTIONS } from '@testrex/contracts';
 import { PgBoss } from 'pg-boss';
 
 /** Hands work to the worker. Jobs must be sent after the transaction that created their data. */
@@ -7,13 +7,6 @@ export interface JobQueue {
   send(queue: string, payload: object): Promise<void>;
   close(): Promise<void>;
 }
-
-/** Queue settings shared with the worker (both create the queues; creation is idempotent). */
-export const QUEUE_OPTIONS: Record<string, { expireInSeconds: number; retryLimit: number }> = {
-  // A run must not be executed twice; stuck runs are cancelled by people.
-  [JOB_QUEUES.runExecute]: { expireInSeconds: 2 * 60 * 60, retryLimit: 0 },
-  [JOB_QUEUES.recordingSession]: { expireInSeconds: 40 * 60, retryLimit: 0 },
-};
 
 /**
  * pg-boss producer, started on first use so the API does not need the queue to serve requests.
@@ -38,7 +31,7 @@ export function pgBossQueue(connectionString: string, logger: Logger): JobQueue 
     async send(queue, payload) {
       const instance = await start();
       if (!created.has(queue)) {
-        await instance.createQueue(queue, QUEUE_OPTIONS[queue] ?? {});
+        await instance.createQueue(queue, JOB_QUEUE_OPTIONS[queue] ?? {});
         created.add(queue);
       }
       await instance.send(queue, payload);

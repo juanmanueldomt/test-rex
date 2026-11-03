@@ -10,6 +10,8 @@ import {
 } from '@testrex/db';
 import { createStorage } from '@testrex/storage';
 import { PgBoss } from 'pg-boss';
+import { launchBrowser } from './execution/browsers';
+import type { LaunchBrowser } from './execution/run-executor';
 import { registerJobs } from './jobs';
 
 export interface StartWorkerOptions {
@@ -18,6 +20,8 @@ export interface StartWorkerOptions {
   migrationsDir?: string;
   /** How often to re-check the schema while migrations are pending. */
   schemaPollMs?: number;
+  /** Starts browsers (tests can replace it). */
+  launch?: LaunchBrowser;
 }
 
 export interface RunningWorker {
@@ -102,7 +106,12 @@ export async function startWorker(options: StartWorkerOptions): Promise<RunningW
       return;
     }
     await boss.start();
-    await registerJobs(boss, { logger, db: handle.db, storage: createStorage(config) });
+    await registerJobs(boss, {
+      logger,
+      db: handle.db,
+      storage: createStorage(config),
+      launch: options.launch ?? launchBrowser,
+    });
     bossStarted = true;
     logger.info('worker is processing jobs');
   })();
