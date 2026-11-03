@@ -1,17 +1,8 @@
 import type { Scenario } from '@testrex/contracts';
-import {
-  Alert,
-  Badge,
-  Button,
-  EmptyState,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@testrex/ui';
+import { Alert, Badge, Button, Tabs, TabsContent, TabsList, TabsTrigger } from '@testrex/ui';
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
-import { ListChecks, Pencil, RotateCcw, Trash2 } from 'lucide-react';
+import { Pencil, RotateCcw, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { ConfirmButton, PageHeader } from '../../components/common';
@@ -19,6 +10,7 @@ import { formatRelative, RelativeTime, StatusBadge, userName } from '../../compo
 import { api, errorMessage } from '../../lib/api';
 import { invalidateScenarios, keys, meQuery, scenarioApi, scenarioQuery } from '../../lib/queries';
 import { useShortcut } from '../../lib/shortcuts';
+import { ScenarioTestCases } from '../test-cases/ScenarioTestCases';
 import { AttachmentsPanel } from './attachments';
 import { CommentsThread, LinksPanel } from './collaboration';
 import { useAttachmentResolver, useScenarioAccess } from './common';
@@ -222,11 +214,7 @@ export function ScenarioPage({
         </TabsContent>
 
         <TabsContent value="cases">
-          <EmptyState
-            icon={<ListChecks />}
-            title={t('scenario.casesTitle')}
-            description={t('scenario.casesBody')}
-          />
+          <ScenarioTestCases orgSlug={orgSlug} appKey={appKey} scenario={scenario} />
         </TabsContent>
 
         <TabsContent value="history">

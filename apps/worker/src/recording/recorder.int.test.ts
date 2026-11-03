@@ -98,6 +98,12 @@ async function send(sessionId: string, command: RecordingCommand) {
 
 describe('runRecordingSession', () => {
   it('records clicks, typing, checkboxes, selects and assertions with unique locators', async () => {
+    // Addresses on the base URL's origin are recorded as paths, so the test stays portable.
+    await inOrg((tx) =>
+      tx
+        .insert(schema.automationSettings)
+        .values({ applicationId: appId, organizationId: orgId, baseUrl: site.url }),
+    );
     const coupon = await centre('#coupon');
     const apply = await centre('#apply');
     const total = await centre('[data-testid=total]');
@@ -139,6 +145,7 @@ describe('runRecordingSession', () => {
     await send(sessionId, { type: 'select', value: 'ar' });
     await send(sessionId, { type: 'click', ...secondRemove });
     await send(sessionId, { type: 'assert', assertion: 'expectTitle' });
+    await send(sessionId, { type: 'assert', assertion: 'expectUrl' });
     await send(sessionId, { type: 'stop' });
     const result = await recording;
     expect(result.status).toBe('stopped');
@@ -148,7 +155,7 @@ describe('runRecordingSession', () => {
     expect(stored.endedAt).not.toBeNull();
     expect(stored.frame?.length).toBeGreaterThan(1000);
     expect(stored.steps.map(({ id: _id, ...step }) => step)).toEqual([
-      { action: 'goto', value: `${site.url}/cart` },
+      { action: 'goto', value: '/cart' },
       {
         action: 'fill',
         target: { strategy: 'role', value: 'textbox', name: 'Coupon' },
@@ -164,6 +171,7 @@ describe('runRecordingSession', () => {
       },
       { action: 'click', target: { strategy: 'role', value: 'button', name: 'Remove', nth: 1 } },
       { action: 'expectTitle', value: 'Cart' },
+      { action: 'expectUrl', value: '/cart' },
     ]);
   });
 

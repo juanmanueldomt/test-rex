@@ -6,6 +6,8 @@ import {
   extractVariables,
   manualStepIssues,
   newStepId,
+  relativeToBaseUrl,
+  relativizeSteps,
   resolveStep,
   stepSchema,
   stepsSchema,
@@ -173,5 +175,49 @@ describe('variables', () => {
     expect(missing).toEqual([]);
     expect(step.target).toEqual({ strategy: 'role', value: 'textbox', name: 'Coupon' });
     expect(step.value).toBe('SAVE10-2');
+  });
+});
+
+describe('relativeToBaseUrl', () => {
+  it('turns URLs on the base origin into origin-relative paths', () => {
+    expect(relativeToBaseUrl('https://shop.test/cart?x=1#top', 'https://shop.test')).toBe(
+      '/cart?x=1#top',
+    );
+    // A base URL with a path still resolves the path from the origin, like Playwright's baseURL.
+    expect(relativeToBaseUrl('https://shop.test/app/login', 'https://shop.test/app')).toBe(
+      '/app/login',
+    );
+  });
+
+  it('keeps other URLs unchanged', () => {
+    expect(relativeToBaseUrl('https://other.test/cart', 'https://shop.test')).toBe(
+      'https://other.test/cart',
+    );
+    expect(relativeToBaseUrl('http://shop.test/cart', 'https://shop.test')).toBe(
+      'http://shop.test/cart',
+    );
+    expect(relativeToBaseUrl('/cart', 'https://shop.test')).toBe('/cart');
+    expect(relativeToBaseUrl('https://shop.test/cart', null)).toBe('https://shop.test/cart');
+  });
+
+  it('relativizes navigation and URL assertions only', () => {
+    const steps: TestStep[] = [
+      { id: 'a', action: 'goto', value: 'https://shop.test/login' },
+      { id: 'b', action: 'expectUrl', value: 'https://shop.test/account' },
+      { id: 'c', action: 'expectUrl', value: 'https://shop.test/' },
+      {
+        id: 'd',
+        action: 'fill',
+        target: { strategy: 'label', value: 'Site' },
+        value: 'https://shop.test/x',
+      },
+    ];
+    expect(relativizeSteps(steps, 'https://shop.test').map((step) => step.value)).toEqual([
+      '/login',
+      '/account',
+      'https://shop.test/',
+      'https://shop.test/x',
+    ]);
+    expect(relativizeSteps(steps, null)).toBe(steps);
   });
 });

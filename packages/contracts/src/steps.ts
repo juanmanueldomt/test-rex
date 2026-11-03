@@ -465,6 +465,39 @@ export function substituteVariables(
   return { text: result, missing: [...missing] };
 }
 
+/**
+ * Makes a recorded URL portable: a URL on the base URL's origin becomes an origin-relative
+ * path (`/cart?step=2`), which resolves to the same address against the base URL and keeps
+ * working when a run targets another environment. Other URLs are returned unchanged.
+ */
+export function relativeToBaseUrl(url: string, baseUrl: string | null | undefined): string {
+  if (!baseUrl) return url;
+  let target: URL;
+  let base: URL;
+  try {
+    target = new URL(url);
+    base = new URL(baseUrl);
+  } catch {
+    return url;
+  }
+  if (target.origin !== base.origin) return url;
+  return `${target.pathname}${target.search}${target.hash}`;
+}
+
+/**
+ * Applies {@link relativeToBaseUrl} to recorded `goto` and `expectUrl` steps. An URL assertion
+ * on the site root keeps its full address: "the URL contains /" would always pass.
+ */
+export function relativizeSteps(steps: TestStep[], baseUrl: string | null | undefined): TestStep[] {
+  if (!baseUrl) return steps;
+  return steps.map((step) => {
+    if ((step.action !== 'goto' && step.action !== 'expectUrl') || !step.value) return step;
+    const value = relativeToBaseUrl(step.value, baseUrl);
+    if (step.action === 'expectUrl' && value === '/') return step;
+    return value === step.value ? step : { ...step, value };
+  });
+}
+
 /** The step with every placeholder resolved, or the names that could not be resolved. */
 export function resolveStep(
   step: TestStep,

@@ -1,9 +1,9 @@
-import { EmptyState, cn } from '@testrex/ui';
+import { cn } from '@testrex/ui';
 import { useQuery } from '@tanstack/react-query';
 import { Link, Outlet, useNavigate, useParams } from '@tanstack/react-router';
-import { Construction, FlaskConical, PlayCircle } from 'lucide-react';
+import { BarChart3, FlaskConical, ListChecks, PlayCircle, Workflow } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { scenarioListQuery } from '../../lib/queries';
+import { scenarioListQuery, testCaseListQuery } from '../../lib/queries';
 import { useShortcut } from '../../lib/shortcuts';
 import { AppHeader } from '../applications';
 
@@ -22,10 +22,31 @@ export function AppShell() {
       void navigate({ to: '/o/$orgSlug/a/$appKey/scenarios', params: { orgSlug, appKey } }),
   });
   useShortcut({
+    keys: 'g c',
+    description: t('shortcuts.goTestCases'),
+    group: 'navigation',
+    handler: () =>
+      void navigate({ to: '/o/$orgSlug/a/$appKey/test-cases', params: { orgSlug, appKey } }),
+  });
+  useShortcut({
     keys: 'g r',
     description: t('shortcuts.goRuns'),
     group: 'navigation',
     handler: () => void navigate({ to: '/o/$orgSlug/a/$appKey/runs', params: { orgSlug, appKey } }),
+  });
+  useShortcut({
+    keys: 'g d',
+    description: t('shortcuts.goReports'),
+    group: 'navigation',
+    handler: () =>
+      void navigate({ to: '/o/$orgSlug/a/$appKey/reports', params: { orgSlug, appKey } }),
+  });
+  useShortcut({
+    keys: 'g a',
+    description: t('shortcuts.goAutomation'),
+    group: 'navigation',
+    handler: () =>
+      void navigate({ to: '/o/$orgSlug/a/$appKey/automation', params: { orgSlug, appKey } }),
   });
   return <Outlet />;
 }
@@ -37,50 +58,64 @@ const tabClasses =
  * The application home: header plus link tabs. Each tab is a route with its own URL, so the
  * active tab survives reloads and shared links (aria-current marks it for assistive tech).
  */
-export function WorkspaceLayout() {
-  const { t } = useTranslation();
-  const { orgSlug, appKey } = useParams({ strict: false }) as AppParams;
-  // Same cache entry as the unfiltered grid.
-  const count = useQuery(scenarioListQuery(orgSlug, appKey, {})).data?.total;
+function Count({ value }: { value: number | undefined }) {
+  if (value === undefined) return null;
   return (
-    <>
-      <AppHeader orgSlug={orgSlug} appKey={appKey} />
-      <nav aria-label={t('workspace.tabs.label')} className="mb-6 flex gap-1 border-b">
-        <Link
-          to="/o/$orgSlug/a/$appKey/scenarios"
-          params={{ orgSlug, appKey }}
-          className={tabClasses}
-          activeOptions={{ includeSearch: false }}
-        >
-          <FlaskConical aria-hidden />
-          {t('workspace.tabs.scenarios')}
-          {count !== undefined ? (
-            <span
-              className={cn(
-                'rounded-full bg-muted px-1.5 text-xs tabular-nums text-muted-foreground',
-              )}
-            >
-              {count}
-            </span>
-          ) : null}
-        </Link>
-        <Link to="/o/$orgSlug/a/$appKey/runs" params={{ orgSlug, appKey }} className={tabClasses}>
-          <PlayCircle aria-hidden />
-          {t('workspace.tabs.runs')}
-        </Link>
-      </nav>
-      <Outlet />
-    </>
+    <span className={cn('rounded-full bg-muted px-1.5 text-xs tabular-nums text-muted-foreground')}>
+      {value}
+    </span>
   );
 }
 
-export function RunsPage() {
+export function WorkspaceLayout() {
   const { t } = useTranslation();
+  const { orgSlug, appKey } = useParams({ strict: false }) as AppParams;
+  // Same cache entries as the unfiltered grids.
+  const scenarios = useQuery(scenarioListQuery(orgSlug, appKey, {})).data?.total;
+  const testCases = useQuery(testCaseListQuery(orgSlug, appKey, {})).data?.total;
+  const tabs = [
+    {
+      to: '/o/$orgSlug/a/$appKey/scenarios',
+      icon: FlaskConical,
+      label: t('workspace.tabs.scenarios'),
+      count: scenarios,
+    },
+    {
+      to: '/o/$orgSlug/a/$appKey/test-cases',
+      icon: ListChecks,
+      label: t('workspace.tabs.testCases'),
+      count: testCases,
+    },
+    { to: '/o/$orgSlug/a/$appKey/runs', icon: PlayCircle, label: t('workspace.tabs.runs') },
+    { to: '/o/$orgSlug/a/$appKey/reports', icon: BarChart3, label: t('workspace.tabs.reports') },
+    {
+      to: '/o/$orgSlug/a/$appKey/automation',
+      icon: Workflow,
+      label: t('workspace.tabs.automation'),
+    },
+  ] as const;
   return (
-    <EmptyState
-      icon={<Construction />}
-      title={t('workspace.runsTitle')}
-      description={t('workspace.runsBody')}
-    />
+    <>
+      <AppHeader orgSlug={orgSlug} appKey={appKey} />
+      <nav
+        aria-label={t('workspace.tabs.label')}
+        className="mb-6 flex gap-1 overflow-x-auto border-b"
+      >
+        {tabs.map((tab) => (
+          <Link
+            key={tab.to}
+            to={tab.to}
+            params={{ orgSlug, appKey }}
+            className={tabClasses}
+            activeOptions={{ includeSearch: false }}
+          >
+            <tab.icon aria-hidden />
+            {tab.label}
+            {'count' in tab ? <Count value={tab.count} /> : null}
+          </Link>
+        ))}
+      </nav>
+      <Outlet />
+    </>
   );
 }

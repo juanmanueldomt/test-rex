@@ -11,7 +11,15 @@ import { TooltipProvider } from '@testrex/ui';
 import { Toaster } from 'sonner';
 import { OrgLayout } from './components/shell';
 import { isApiError } from './lib/api';
-import { appQuery, meQuery, orgQuery, queryClient, scenarioQuery } from './lib/queries';
+import {
+  appQuery,
+  meQuery,
+  orgQuery,
+  queryClient,
+  runQuery,
+  scenarioQuery,
+  testCaseQuery,
+} from './lib/queries';
 import { ShortcutProvider } from './lib/shortcuts';
 import { useTheme } from './lib/theme';
 import { ApplicationsPage } from './pages/applications';
@@ -28,7 +36,23 @@ import {
   type ScenarioSearch,
 } from './pages/scenarios/ScenarioGrid';
 import { SCENARIO_TABS, ScenarioPage, type ScenarioTab } from './pages/scenarios/ScenarioPage';
-import { AppShell, RunsPage, WorkspaceLayout } from './pages/scenarios/workspace';
+import { AppShell, WorkspaceLayout } from './pages/scenarios/workspace';
+import {
+  AUTOMATION_TABS,
+  AutomationPage,
+  DatasetPage,
+  type AutomationTab,
+} from './pages/automation/AutomationPage';
+import { ReportsPage } from './pages/reports/ReportsPage';
+import { RunPage } from './pages/runs/RunPage';
+import { RunsPage, validateRunSearch, type RunSearch } from './pages/runs/RunsPage';
+import {
+  TestCaseGridPage,
+  validateTestCaseSearch,
+  type TestCaseSearch,
+} from './pages/test-cases/TestCaseGrid';
+import { EditTestCasePage, NewTestCasePage } from './pages/test-cases/TestCaseForm';
+import { TEST_CASE_TABS, TestCasePage, type TestCaseTab } from './pages/test-cases/TestCasePage';
 
 function Root() {
   const [theme] = useTheme();
@@ -160,7 +184,7 @@ const orgIndexRoute = createRoute({
   },
 });
 
-const orgTabs: readonly OrgSettingsTab[] = ['general', 'members', 'invitations', 'audit'];
+const orgTabs: readonly OrgSettingsTab[] = ['general', 'members', 'invitations', 'audit', 'ai'];
 const orgSettingsRoute = createRoute({
   getParentRoute: () => orgRoute,
   path: '/settings',
@@ -222,10 +246,155 @@ const scenariosRoute = createRoute({
   },
 });
 
+const testCasesRoute = createRoute({
+  getParentRoute: () => workspaceRoute,
+  path: '/test-cases',
+  validateSearch: (search: Record<string, unknown>): TestCaseSearch =>
+    validateTestCaseSearch(search),
+  component: function TestCasesRoute() {
+    const { orgSlug, appKey } = testCasesRoute.useParams();
+    return (
+      <TestCaseGridPage orgSlug={orgSlug} appKey={appKey} search={testCasesRoute.useSearch()} />
+    );
+  },
+});
+
 const runsRoute = createRoute({
   getParentRoute: () => workspaceRoute,
   path: '/runs',
-  component: RunsPage,
+  validateSearch: (search: Record<string, unknown>): RunSearch => validateRunSearch(search),
+  component: function RunsRoute() {
+    const { orgSlug, appKey } = runsRoute.useParams();
+    return <RunsPage orgSlug={orgSlug} appKey={appKey} search={runsRoute.useSearch()} />;
+  },
+});
+
+const reportsRoute = createRoute({
+  getParentRoute: () => workspaceRoute,
+  path: '/reports',
+  component: function ReportsRoute() {
+    const { orgSlug, appKey } = reportsRoute.useParams();
+    return <ReportsPage orgSlug={orgSlug} appKey={appKey} />;
+  },
+});
+
+const automationRoute = createRoute({
+  getParentRoute: () => workspaceRoute,
+  path: '/automation',
+  validateSearch: (search: Record<string, unknown>): { tab?: AutomationTab } => ({
+    tab: AUTOMATION_TABS.includes(search.tab as AutomationTab)
+      ? (search.tab as AutomationTab)
+      : undefined,
+  }),
+  component: function AutomationRoute() {
+    const { orgSlug, appKey } = automationRoute.useParams();
+    return (
+      <AutomationPage
+        orgSlug={orgSlug}
+        appKey={appKey}
+        tab={automationRoute.useSearch().tab ?? 'settings'}
+      />
+    );
+  },
+});
+
+const datasetRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/automation/datasets/$datasetId',
+  component: function DatasetRoute() {
+    const { orgSlug, appKey, datasetId } = datasetRoute.useParams();
+    return <DatasetPage orgSlug={orgSlug} appKey={appKey} datasetId={datasetId} />;
+  },
+});
+
+const newTestCaseRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/test-cases/new',
+  validateSearch: (search: Record<string, unknown>): { scenario?: string } => ({
+    scenario: str(search.scenario),
+  }),
+  component: function NewTestCaseRoute() {
+    const { orgSlug, appKey } = newTestCaseRoute.useParams();
+    return (
+      <NewTestCasePage
+        orgSlug={orgSlug}
+        appKey={appKey}
+        scenarioKey={newTestCaseRoute.useSearch().scenario}
+      />
+    );
+  },
+});
+
+/** Unknown test cases (and those of other applications) surface as not found. */
+async function loadTestCase(
+  client: QueryClient,
+  params: { orgSlug: string; appKey: string; testCaseKey: string },
+) {
+  try {
+    await client.fetchQuery(testCaseQuery(params.orgSlug, params.appKey, params.testCaseKey));
+  } catch (error) {
+    if (isApiError(error, 404)) throw notFound();
+    throw error;
+  }
+}
+
+const testCaseRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/test-cases/$testCaseKey',
+  validateSearch: (search: Record<string, unknown>): { tab?: TestCaseTab } => ({
+    tab: TEST_CASE_TABS.includes(search.tab as TestCaseTab)
+      ? (search.tab as TestCaseTab)
+      : undefined,
+  }),
+  loader: ({ context, params }) => loadTestCase(context.queryClient, params),
+  component: function TestCaseRoute() {
+    const { orgSlug, appKey, testCaseKey } = testCaseRoute.useParams();
+    return (
+      <TestCasePage
+        orgSlug={orgSlug}
+        appKey={appKey}
+        testCaseKey={testCaseKey}
+        tab={testCaseRoute.useSearch().tab ?? 'steps'}
+      />
+    );
+  },
+});
+
+const editTestCaseRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/test-cases/$testCaseKey/edit',
+  loader: ({ context, params }) => loadTestCase(context.queryClient, params),
+  component: function EditTestCaseRoute() {
+    const { orgSlug, appKey, testCaseKey } = editTestCaseRoute.useParams();
+    return <EditTestCasePage orgSlug={orgSlug} appKey={appKey} testCaseKey={testCaseKey} />;
+  },
+});
+
+const runRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/runs/$runKey',
+  validateSearch: (search: Record<string, unknown>): { item?: string } => ({
+    item: str(search.item),
+  }),
+  loader: async ({ context, params }) => {
+    try {
+      await context.queryClient.fetchQuery(runQuery(params.orgSlug, params.appKey, params.runKey));
+    } catch (error) {
+      if (isApiError(error, 404)) throw notFound();
+      throw error;
+    }
+  },
+  component: function RunRoute() {
+    const { orgSlug, appKey, runKey } = runRoute.useParams();
+    return (
+      <RunPage
+        orgSlug={orgSlug}
+        appKey={appKey}
+        runKey={runKey}
+        itemId={runRoute.useSearch().item}
+      />
+    );
+  },
 });
 
 const newScenarioRoute = createRoute({
@@ -358,8 +527,19 @@ const routeTree = rootRoute.addChildren([
       orgSettingsRoute,
       appRoute.addChildren([
         appIndexRoute,
-        workspaceRoute.addChildren([scenariosRoute, runsRoute]),
+        workspaceRoute.addChildren([
+          scenariosRoute,
+          testCasesRoute,
+          runsRoute,
+          reportsRoute,
+          automationRoute,
+        ]),
         newScenarioRoute,
+        newTestCaseRoute,
+        testCaseRoute,
+        editTestCaseRoute,
+        runRoute,
+        datasetRoute,
         scenarioRoute,
         editScenarioRoute,
         revisionRoute,

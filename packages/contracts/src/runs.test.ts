@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_AUTOMATION_SETTINGS } from './automation';
 import {
   aggregateStatus,
+  compactRunListQuery,
   countStatuses,
   createRunSchema,
   junitXml,
   manualResultSchema,
+  parseRunListQueryLenient,
   passRate,
   type RunReport,
 } from './runs';
@@ -162,5 +164,20 @@ describe('junitXml', () => {
     );
     expect(xml).toContain('Step: Expect text &quot;Status&quot; to contain &quot;Paid&quot;');
     expect(xml).toContain('<skipped message="skipped"/>');
+  });
+});
+
+describe('run list query', () => {
+  it('drops invalid parameters instead of failing', () => {
+    expect(
+      parseRunListQueryLenient({ q: 'nightly', status: 'running,bogus', size: '7', page: '2' }),
+    ).toEqual({ q: 'nightly', sort: '-key', page: 2, size: 25 });
+  });
+
+  it('compacts to the canonical form without defaults', () => {
+    expect(compactRunListQuery(parseRunListQueryLenient({}))).toEqual({});
+    expect(
+      compactRunListQuery({ q: 'smoke', status: ['running', 'queued'], sort: 'title', size: 50 }),
+    ).toEqual({ q: 'smoke', size: 50, sort: 'title', status: 'queued,running' });
   });
 });

@@ -7,6 +7,7 @@ import {
   ARIA_ROLES,
   newStepId,
   RECORDING_IDLE_MS,
+  relativizeSteps,
   RECORDING_MAX_MS,
   recordingCommandSchema,
   type RecordedElement,
@@ -173,10 +174,15 @@ export class RecordingSession {
   private current: Identified | null = null;
   error: string | null = null;
 
-  constructor(private readonly page: Page) {}
+  /** `baseUrl`: recorded addresses on its origin are kept as paths, so tests stay portable. */
+  constructor(
+    private readonly page: Page,
+    private readonly baseUrl: string | null = null,
+  ) {}
 
   private push(step: Omit<TestStep, 'id'>) {
-    this.steps.push({ id: newStepId(), ...step } as TestStep);
+    const [recorded] = relativizeSteps([{ id: newStepId(), ...step } as TestStep], this.baseUrl);
+    this.steps.push(recorded!);
   }
 
   private async settle() {
@@ -352,6 +358,12 @@ export async function runRecordingSession(
   if (!session || session.status !== 'starting') {
     return { status: session?.status ?? 'failed', steps: 0 };
   }
+  const [settings] = await inOrg((tx) =>
+    tx
+      .select({ baseUrl: schema.automationSettings.baseUrl })
+      .from(schema.automationSettings)
+      .where(eq(schema.automationSettings.applicationId, session.applicationId)),
+  );
 
   let browser: Browser | null = null;
   let status: RecordingStatus = 'active';
@@ -397,7 +409,7 @@ export async function runRecordingSession(
     context.setDefaultNavigationTimeout(30_000);
     await context.addInitScript({ content: RECORDER_PAGE_SCRIPT });
     const page = await context.newPage();
-    recorder = new RecordingSession(page);
+    recorder = new RecordingSession(page, settings?.baseUrl ?? null);
     await recorder.start(session.startUrl);
     await persist(page);
 

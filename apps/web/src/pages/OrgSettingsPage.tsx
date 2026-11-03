@@ -61,8 +61,9 @@ import {
   type AuditFilters,
 } from '../lib/queries';
 import { validate, type FieldErrors } from '../lib/validation';
+import { AiSettingsSection } from './AiSettingsSection';
 
-export type OrgSettingsTab = 'general' | 'members' | 'invitations' | 'audit';
+export type OrgSettingsTab = 'general' | 'members' | 'invitations' | 'audit' | 'ai';
 
 function GeneralSection({ org }: { org: OrgContext }) {
   const { t } = useTranslation();
@@ -574,8 +575,12 @@ export function OrgSettingsPage({ orgSlug, tab }: { orgSlug: string; tab: OrgSet
   const org = useSuspenseQuery(orgQuery(orgSlug)).data;
   const canManage = hasOrgPermission(org.role, 'members.manage');
   const canAudit = hasOrgPermission(org.role, 'audit.read');
-  const visible = (['general', 'members', 'invitations', 'audit'] as const).filter(
-    (item) => (item !== 'invitations' || canManage) && (item !== 'audit' || canAudit),
+  const canConfigure = hasOrgPermission(org.role, 'org.manage');
+  const visible = (['general', 'members', 'invitations', 'audit', 'ai'] as const).filter(
+    (item) =>
+      (item !== 'invitations' || canManage) &&
+      (item !== 'audit' || canAudit) &&
+      (item !== 'ai' || canConfigure),
   );
   const current = visible.includes(tab) ? tab : 'general';
 
@@ -614,6 +619,11 @@ export function OrgSettingsPage({ orgSlug, tab }: { orgSlug: string; tab: OrgSet
         {canAudit ? (
           <TabsContent value="audit">
             <AuditSection org={org} />
+          </TabsContent>
+        ) : null}
+        {canConfigure ? (
+          <TabsContent value="ai">
+            <AiSettingsSection orgSlug={org.slug} />
           </TabsContent>
         ) : null}
       </Tabs>

@@ -27,11 +27,13 @@ import {
   isEditableTarget,
   isEscapeBinding,
   isSingleKeyBinding,
+  orderBindings,
   setSingleKeyShortcutsEnabled,
   singleKeyShortcutsEnabled,
 } from './shortcut-keys';
 
-export type ShortcutGroup = 'general' | 'navigation' | 'scenarios' | 'editing';
+export type ShortcutGroup =
+  'general' | 'navigation' | 'scenarios' | 'testCases' | 'runs' | 'editing';
 
 export interface ShortcutOptions {
   /** tinykeys syntax: `c`, `g s`, `$mod+s`, `[Shift]+?`, `Escape`. */
@@ -106,7 +108,9 @@ export function ShortcutProvider({ children }: { children: ReactNode }) {
   // One listener for all bindings, so sequences like `g s` are tracked consistently.
   const bindingKeys = useMemo(
     () =>
-      [...new Set(registrations.filter((r) => r.enabled !== false).map((r) => r.keys))].join('\n'),
+      orderBindings([
+        ...new Set(registrations.filter((r) => r.enabled !== false).map((r) => r.keys)),
+      ]).join('\n'),
     [registrations],
   );
   useEffect(() => {
@@ -207,7 +211,14 @@ function HelpShortcut({ onOpen }: { onOpen: () => void }) {
   return null;
 }
 
-const GROUP_ORDER: ShortcutGroup[] = ['general', 'navigation', 'scenarios', 'editing'];
+const GROUP_ORDER: ShortcutGroup[] = [
+  'general',
+  'navigation',
+  'scenarios',
+  'testCases',
+  'runs',
+  'editing',
+];
 
 export function ShortcutHelpDialog({
   open,

@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
+import { tinykeys } from 'tinykeys';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   displayKeys,
   isEditableTarget,
   isSingleKeyBinding,
+  orderBindings,
   setSingleKeyShortcutsEnabled,
   singleKeyShortcutsEnabled,
 } from './shortcut-keys';
@@ -76,5 +78,47 @@ describe('displayKeys', () => {
     expect(displayKeys('g s', false)).toEqual([['G'], ['S']]);
     expect(displayKeys('[Shift]+?', false)).toEqual([['?']]);
     expect(displayKeys('Escape', false)).toEqual([['Esc']]);
+  });
+});
+
+describe('orderBindings', () => {
+  it('puts longer sequences first', () => {
+    expect(orderBindings(['c', 'g c', '$mod+k', 'g s', '[Shift]+?'])).toEqual([
+      'g c',
+      'g s',
+      'c',
+      '$mod+k',
+      '[Shift]+?',
+    ]);
+  });
+
+  it('lets `g c` win over a page shortcut on `c`', () => {
+    const fired: string[] = [];
+    // Registered in the order React mounts them: the page (child) before the workspace.
+    const handlers: Record<string, (event: KeyboardEvent) => void> = {
+      c: (event) => {
+        if (event.defaultPrevented) return;
+        fired.push('c');
+        event.preventDefault();
+      },
+      'g c': (event) => {
+        if (event.defaultPrevented) return;
+        fired.push('g c');
+        event.preventDefault();
+      },
+    };
+    const bindings = Object.fromEntries(
+      orderBindings(Object.keys(handlers)).map((k) => [k, handlers[k]!]),
+    );
+    const stop = tinykeys(window, bindings);
+    const press = (key: string) =>
+      window.dispatchEvent(
+        new KeyboardEvent('keydown', { key, code: `Key${key.toUpperCase()}`, cancelable: true }),
+      );
+    press('g');
+    press('c');
+    press('c');
+    stop();
+    expect(fired).toEqual(['g c', 'c']);
   });
 });

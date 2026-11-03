@@ -146,6 +146,31 @@ export const runListQuerySchema = z.object({
 });
 export type RunListQuery = z.infer<typeof runListQuerySchema>;
 
+/** Parses untrusted search parameters, dropping invalid ones instead of failing. */
+export function parseRunListQueryLenient(raw: Record<string, unknown>): RunListQuery {
+  let input = { ...raw };
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const result = runListQuerySchema.safeParse(input);
+    if (result.success) return result.data;
+    const bad = new Set(result.error.issues.map((issue) => String(issue.path[0])));
+    input = Object.fromEntries(Object.entries(input).filter(([key]) => !bad.has(key)));
+  }
+  return runListQuerySchema.parse({});
+}
+
+/** Canonical compact form: defaults omitted (URLs, requests and cache keys). */
+export function compactRunListQuery(
+  query: Partial<RunListQuery>,
+): Record<string, string | number | boolean> {
+  const out: Record<string, string | number | boolean> = {};
+  if (query.q) out.q = query.q;
+  if (query.status?.length) out.status = [...query.status].sort().join(',');
+  if (query.sort && query.sort !== '-key') out.sort = query.sort;
+  if (query.page && query.page !== 1) out.page = query.page;
+  if (query.size && query.size !== RUN_PAGE_SIZES[0]) out.size = query.size;
+  return Object.fromEntries(Object.entries(out).sort(([a], [b]) => a.localeCompare(b)));
+}
+
 export const REPORT_PERIODS = [7, 30, 90] as const;
 export const reportQuerySchema = z.object({
   days: z.coerce

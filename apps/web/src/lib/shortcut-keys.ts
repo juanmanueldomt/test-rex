@@ -14,6 +14,16 @@ export function isEscapeBinding(keys: string): boolean {
   return keys.trim() === 'Escape';
 }
 
+/**
+ * Bindings in the order they are given to the key listener: longer sequences first. tinykeys
+ * fires only the first binding, in order, that a key press completes, so after `g` the
+ * sequence `g c` must come before a page's own `c`.
+ */
+export function orderBindings(keys: readonly string[]): string[] {
+  const presses = (binding: string) => binding.trim().split(/\s+/).length;
+  return [...keys].sort((a, b) => presses(b) - presses(a));
+}
+
 /** Text fields, selects, editors: typing there must never trigger plain-key shortcuts. */
 export function isEditableTarget(target: EventTarget | null): boolean {
   if (!target || typeof (target as Element).closest !== 'function') return false;
